@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         automatic translation
 // @namespace    https://viayoo.com/
-// @version      v1.1
-// @description  按站点设置自动翻译整个页面
+// @version      v1.7
+// @description  自动翻译整个网页，支持划词翻译、智能识别和朗读
 // @author       leon
 // @run-at       document-start
 // @match        https://*/*
@@ -18,6 +18,68 @@
 // @license      MIT
 // ==/UserScript==
 
+/* ==UserConfig==
+常规:
+    defaultTranslate:
+        title: 默认自动翻译
+        type: switch
+        default: true
+    iconOpacity:
+        title: 图标淡化透明度
+        type: number
+        default: 50
+        min: 10
+        max: 100
+        unit: "%"
+    engine:
+        title: 翻译服务
+        type: select
+        default: "微软翻译"
+        values: ["微软翻译", "Google 翻译", "MyMemory 翻译", "自定义接口"]
+    customUrl:
+        title: 自定义接口地址
+        type: text
+        description: "仅在选择「自定义接口」时填写，支持 {text}、{from}、{to} 占位符"
+    customResultPath:
+        title: 自定义结果字段
+        type: text
+        default: "translatedText"
+悬浮翻译:
+    enabled:
+        title: 启用悬浮翻译
+        type: switch
+        default: true
+    from:
+        title: 语言 A
+        type: select
+        default: "英语"
+        values: ["所有语言", "英语", "简体中文", "繁体中文", "法语", "德语", "日语", "韩语", "俄语", "西班牙语", "葡萄牙语", "意大利语", "阿拉伯语", "越南语", "泰语", "荷兰语", "波兰语", "土耳其语", "乌克兰语", "印尼语", "马来语", "印地语", "孟加拉语", "乌尔都语", "波斯语", "希伯来语", "希腊语", "瑞典语", "丹麦语", "芬兰语", "挪威语", "捷克语", "斯洛伐克语", "匈牙利语", "罗马尼亚语", "保加利亚语", "克罗地亚语", "塞尔维亚语", "斯洛文尼亚语", "立陶宛语", "拉脱维亚语", "爱沙尼亚语", "斯瓦希里语", "泰米尔语", "泰卢固语", "马拉雅拉姆语", "马拉地语", "古吉拉特语", "卡纳达语", "旁遮普语", "尼泊尔语", "南非荷兰语", "阿尔巴尼亚语", "阿姆哈拉语", "亚美尼亚语", "阿塞拜疆语", "巴斯克语", "加泰罗尼亚语", "菲律宾语", "爱尔兰语", "冰岛语", "高棉语", "老挝语", "蒙古语", "缅甸语", "僧伽罗语", "祖鲁语"]
+    to:
+        title: 语言 B
+        type: select
+        default: "简体中文"
+        values: ["英语", "简体中文", "繁体中文", "法语", "德语", "日语", "韩语", "俄语", "西班牙语", "葡萄牙语", "意大利语", "阿拉伯语", "越南语", "泰语", "荷兰语", "波兰语", "土耳其语", "乌克兰语", "印尼语", "马来语", "印地语", "孟加拉语", "乌尔都语", "波斯语", "希伯来语", "希腊语", "瑞典语", "丹麦语", "芬兰语", "挪威语", "捷克语", "斯洛伐克语", "匈牙利语", "罗马尼亚语", "保加利亚语", "克罗地亚语", "塞尔维亚语", "斯洛文尼亚语", "立陶宛语", "拉脱维亚语", "爱沙尼亚语", "斯瓦希里语", "泰米尔语", "泰卢固语", "马拉雅拉姆语", "马拉地语", "古吉拉特语", "卡纳达语", "旁遮普语", "尼泊尔语", "南非荷兰语", "阿尔巴尼亚语", "阿姆哈拉语", "亚美尼亚语", "阿塞拜疆语", "巴斯克语", "加泰罗尼亚语", "菲律宾语", "爱尔兰语", "冰岛语", "高棉语", "老挝语", "蒙古语", "缅甸语", "僧伽罗语", "祖鲁语"]
+划词翻译:
+    enabled:
+        title: 启用划词翻译
+        type: switch
+        default: true
+    smartDetect:
+        title: 智能识别
+        type: switch
+        default: true
+    langA:
+        title: 语言 A
+        type: select
+        default: "英语"
+        values: ["英语", "简体中文", "繁体中文", "法语", "德语", "日语", "韩语", "俄语", "西班牙语", "葡萄牙语", "意大利语", "阿拉伯语", "越南语", "泰语", "荷兰语", "波兰语", "土耳其语", "乌克兰语", "印尼语", "马来语", "印地语", "孟加拉语", "乌尔都语", "波斯语", "希伯来语", "希腊语", "瑞典语", "丹麦语", "芬兰语", "挪威语", "捷克语", "斯洛伐克语", "匈牙利语", "罗马尼亚语", "保加利亚语", "克罗地亚语", "塞尔维亚语", "斯洛文尼亚语", "立陶宛语", "拉脱维亚语", "爱沙尼亚语", "斯瓦希里语", "泰米尔语", "泰卢固语", "马拉雅拉姆语", "马拉地语", "古吉拉特语", "卡纳达语", "旁遮普语", "尼泊尔语", "南非荷兰语", "阿尔巴尼亚语", "阿姆哈拉语", "亚美尼亚语", "阿塞拜疆语", "巴斯克语", "加泰罗尼亚语", "菲律宾语", "爱尔兰语", "冰岛语", "高棉语", "老挝语", "蒙古语", "缅甸语", "僧伽罗语", "祖鲁语"]
+    langB:
+        title: 语言 B
+        type: select
+        default: "简体中文"
+        values: ["英语", "简体中文", "繁体中文", "法语", "德语", "日语", "韩语", "俄语", "西班牙语", "葡萄牙语", "意大利语", "阿拉伯语", "越南语", "泰语", "荷兰语", "波兰语", "土耳其语", "乌克兰语", "印尼语", "马来语", "印地语", "孟加拉语", "乌尔都语", "波斯语", "希伯来语", "希腊语", "瑞典语", "丹麦语", "芬兰语", "挪威语", "捷克语", "斯洛伐克语", "匈牙利语", "罗马尼亚语", "保加利亚语", "克罗地亚语", "塞尔维亚语", "斯洛文尼亚语", "立陶宛语", "拉脱维亚语", "爱沙尼亚语", "斯瓦希里语", "泰米尔语", "泰卢固语", "马拉雅拉姆语", "马拉地语", "古吉拉特语", "卡纳达语", "旁遮普语", "尼泊尔语", "南非荷兰语", "阿尔巴尼亚语", "阿姆哈拉语", "亚美尼亚语", "阿塞拜疆语", "巴斯克语", "加泰罗尼亚语", "菲律宾语", "爱尔兰语", "冰岛语", "高棉语", "老挝语", "蒙古语", "缅甸语", "僧伽罗语", "祖鲁语"]
+==/UserConfig== */
+
 (function() {
   'use strict';
 
@@ -28,19 +90,16 @@
   const DOM_CHANGE_DELAY = 800;
   const SCROLL_CHECK_DELAY = 2000;
   const MAX_RETRY_COUNT = 2;
-  const SITE_PREF_PREFIX = 'auto_translate_site_pref:';
-  const MANUAL_SITE_LIST_KEY = 'auto_translate_manual_sites';
   const CONTROL_POSITION_KEY = 'auto_translate_control_position';
+  // 以下旧版存储 key 仅用于升级时迁移到脚本猫配置项。
   const TRANSLATOR_SETTINGS_KEY = 'auto_translate_translator_settings';
   const LANGUAGE_SETTINGS_KEY = 'auto_translate_language_settings';
   const ICON_OPACITY_KEY = 'auto_translate_icon_opacity';
   const DEFAULT_SITE_PREF_KEY = 'auto_translate_default_site_pref';
-  const INSTALL_HINT_SEEN_KEY = 'auto_translate_install_hint_seen';
-  const PROMPT_EVERY_PAGE_KEY = 'auto_translate_prompt_every_page';
-  const PREF_ON = 'on';
-  const PREF_OFF = 'off';
+  const SELECTION_TRANSLATE_KEY = 'auto_translate_selection_translate';
+  const SELECTION_DIRECTION_KEY = 'auto_translate_selection_direction';
+  const SELECTION_MAX_LENGTH = 5000;
   const ICON_DIM_DELAY = 5000;
-  const INSTALL_HINT_DELAY = 5000;
   const DEFAULT_ICON_OPACITY = 0.5;
   const DEFAULT_TRANSLATOR_SETTINGS = {
     engine: 'microsoft',
@@ -51,6 +110,41 @@
     from: 'en',
     to: 'zh-Hans'
   };
+  const DEFAULT_SELECTION_DIRECTION = {
+    smartDetect: true,
+    langA: 'en',
+    langB: 'zh-Hans'
+  };
+  // 这些 key 与文件开头的 ==UserConfig== 分组一一对应，脚本猫会在脚本管理页生成配置界面。
+  const CONFIG_KEYS = {
+    defaultTranslate: '常规.defaultTranslate',
+    iconOpacity: '常规.iconOpacity',
+    engine: '常规.engine',
+    from: '悬浮翻译.from',
+    to: '悬浮翻译.to',
+    customUrl: '常规.customUrl',
+    customResultPath: '常规.customResultPath',
+    floatingEnabled: '悬浮翻译.enabled',
+    selectionEnabled: '划词翻译.enabled',
+    selectionSmartDetect: '划词翻译.smartDetect',
+    selectionLangA: '划词翻译.langA',
+    selectionLangB: '划词翻译.langB'
+  };
+  // 兼容旧版分组名（含更早的英文分组名），读取时按顺序回退。
+  const CONFIG_KEY_ALIASES = {
+    '常规.defaultTranslate': ['行为.defaultTranslate', 'Behavior.defaultTranslate'],
+    '常规.iconOpacity': ['行为.iconOpacity', 'Behavior.iconOpacity'],
+    '常规.engine': ['悬浮球翻译.engine', 'Translation.engine'],
+    '悬浮翻译.from': ['常规.from', '悬浮球翻译.from', 'Translation.from'],
+    '悬浮翻译.to': ['常规.to', '悬浮球翻译.to', 'Translation.to'],
+    '常规.customUrl': ['悬浮球翻译.customUrl', 'Translation.customUrl'],
+    '常规.customResultPath': ['悬浮球翻译.customResultPath', 'Translation.customResultPath'],
+    '划词翻译.enabled': ['Selection.enabled'],
+    '划词翻译.smartDetect': ['划词翻译.bidirectional', 'Selection.bidirectional', 'Selection.smartDetect'],
+    '划词翻译.langA': ['Selection.langA'],
+    '划词翻译.langB': ['Selection.langB']
+  };
+  const CONFIG_MISSING = '__auto_translate_config_missing__';
   const TRANSLATOR_OPTIONS = [
     { value: 'microsoft', label: '微软翻译' },
     { value: 'google', label: 'Google 翻译' },
@@ -130,12 +224,24 @@
     return option.value !== 'auto';
   });
 
-  let microsoftAuthToken = null;
-  let microsoftTranslatorActive = false;
+  const TRANSLATOR_LABEL_TO_VALUE = {};
+  const TRANSLATOR_VALUE_TO_LABEL = {};
+  TRANSLATOR_OPTIONS.forEach(function(option) {
+    TRANSLATOR_LABEL_TO_VALUE[option.label] = option.value;
+    TRANSLATOR_VALUE_TO_LABEL[option.value] = option.label;
+  });
+
+  const LANGUAGE_LABEL_TO_VALUE = {};
+  const LANGUAGE_VALUE_TO_LABEL = {};
+  SOURCE_LANGUAGE_OPTIONS.forEach(function(option) {
+    LANGUAGE_LABEL_TO_VALUE[option.label] = option.value;
+    LANGUAGE_VALUE_TO_LABEL[option.value] = option.label;
+  });
+
   let translatorReady = false;
   let translatorSettings = Object.assign({}, DEFAULT_TRANSLATOR_SETTINGS);
   let languageSettings = Object.assign({}, DEFAULT_LANGUAGE_SETTINGS);
-  let siteTranslationEnabled = false;
+  let translationEnabled = false;
   let pageTranslating = false;
   let translationCache = new Map();
   let originalTextMap = new Map();
@@ -147,11 +253,9 @@
   let continuousTranslationTimer = null;
   let translationRetryCount = 0;
   let lastTranslationTime = 0;
-  let sitePreference = null;
-  let defaultSitePreference = PREF_ON;
-  let promptEveryPage = false;
+  let defaultTranslateEnabled = true;
+  let floatingTranslateEnabled = true;
   let controlRoot = null;
-  let settingsRoot = null;
   let iconDimTimer = null;
   let iconDimOpacity = DEFAULT_ICON_OPACITY;
   let translatorStartPromise = null;
@@ -161,8 +265,23 @@
   let dragStartY = 0;
   let dragStartLeft = 0;
   let dragStartTop = 0;
+  let selectionTranslateEnabled = true;
+  let selectionDirection = Object.assign({}, DEFAULT_SELECTION_DIRECTION);
+  let selectionUiRoot = null;
+  let selectionText = '';
+  let selectionTextTruncated = false;
+  let selectionResultTargetLang = '';
+  let selectionResultSourceLang = '';
+  let selectionAnchorRect = null;
+  let selectionRequestId = 0;
+  let selectionShowTimer = null;
+  let selectionPointerDown = false;
+  let selectionIgnoreHideUntil = 0;
+  let selectionResultOpen = false;
+  let selectionListenersAttached = false;
+  let selectionSpeakingText = '';
 
-  // ── 站点开关、设置与界面 ─────────────────────────────
+  // ── 配置读取与悬浮球 ─────────────────────────────────
 
   function getStoredValue(key, fallback) {
     try {
@@ -188,102 +307,111 @@
     } catch (e) {}
   }
 
-  function getSiteKey() {
-    return location.hostname || location.host || location.origin || 'local';
+  function getConfigValue(key, fallback) {
+    const value = getStoredValue(key, CONFIG_MISSING);
+    if (value !== CONFIG_MISSING) return value;
+
+    const aliasKeys = CONFIG_KEY_ALIASES[key] || [];
+    for (let i = 0; i < aliasKeys.length; i++) {
+      const aliasValue = getStoredValue(aliasKeys[i], CONFIG_MISSING);
+      if (aliasValue !== CONFIG_MISSING) return aliasValue;
+    }
+
+    return fallback;
   }
 
-  function getPreferenceKey(siteKey) {
-    return SITE_PREF_PREFIX + (siteKey || getSiteKey());
-  }
-
-  function normalizePreference(value) {
-    if (value === PREF_ON || value === true || value === 'true') return PREF_ON;
-    if (value === PREF_OFF || value === false || value === 'false') return PREF_OFF;
+  function normalizeConfigBoolean(value) {
+    if (value === true || value === 'true' || value === 1 || value === '1') return true;
+    if (value === false || value === 'false' || value === 0 || value === '0') return false;
     return null;
   }
 
-  function hasSeenInstallHint() {
-    return getStoredValue(INSTALL_HINT_SEEN_KEY, false) === true;
+  function normalizeTranslatorValue(value) {
+    if (!value) return DEFAULT_TRANSLATOR_SETTINGS.engine;
+    if (TRANSLATOR_OPTIONS.some(function(option) { return option.value === value; })) return value;
+    return TRANSLATOR_LABEL_TO_VALUE[value] || DEFAULT_TRANSLATOR_SETTINGS.engine;
   }
 
-  function markInstallHintSeen() {
-    setStoredValue(INSTALL_HINT_SEEN_KEY, true);
+  function normalizeLanguageValue(value, options, fallback) {
+    if (!value) return fallback;
+    if (options.some(function(option) { return option.value === value; })) return value;
+    const mapped = LANGUAGE_LABEL_TO_VALUE[value];
+    if (mapped && options.some(function(option) { return option.value === mapped; })) return mapped;
+    return fallback;
   }
 
-  function readDefaultSitePreference() {
-    defaultSitePreference = normalizePreference(getStoredValue(DEFAULT_SITE_PREF_KEY, PREF_ON)) || PREF_ON;
-    return defaultSitePreference;
+  function getTranslatorLabel(value) {
+    return TRANSLATOR_VALUE_TO_LABEL[value] || value;
   }
 
-  function saveDefaultSitePreference(value) {
-    defaultSitePreference = normalizePreference(value) || PREF_ON;
-    setStoredValue(DEFAULT_SITE_PREF_KEY, defaultSitePreference);
+  function getLanguageConfigLabel(value) {
+    return LANGUAGE_VALUE_TO_LABEL[value] || value;
   }
 
-  function readPromptEveryPage() {
-    promptEveryPage = getStoredValue(PROMPT_EVERY_PAGE_KEY, false) === true;
-    return promptEveryPage;
+  function readDefaultTranslate() {
+    const legacyRaw = getStoredValue(DEFAULT_SITE_PREF_KEY, undefined);
+    const legacy = legacyRaw === 'on' ? true : legacyRaw === 'off' ? false : normalizeConfigBoolean(legacyRaw);
+    const configValue = normalizeConfigBoolean(getConfigValue(CONFIG_KEYS.defaultTranslate, undefined));
+    const resolved = configValue === null ? legacy : configValue;
+    defaultTranslateEnabled = resolved === null ? true : resolved;
+    setStoredValue(CONFIG_KEYS.defaultTranslate, defaultTranslateEnabled);
+    return defaultTranslateEnabled;
   }
 
-  function savePromptEveryPage(value) {
-    promptEveryPage = value === true;
-    setStoredValue(PROMPT_EVERY_PAGE_KEY, promptEveryPage);
+  function readFloatingTranslateEnabled() {
+    const configValue = normalizeConfigBoolean(getConfigValue(CONFIG_KEYS.floatingEnabled, undefined));
+    floatingTranslateEnabled = configValue === null ? true : configValue;
+    setStoredValue(CONFIG_KEYS.floatingEnabled, floatingTranslateEnabled);
+    return floatingTranslateEnabled;
   }
 
-  function readManualSites() {
-    const stored = getStoredValue(MANUAL_SITE_LIST_KEY, []);
-    const list = Array.isArray(stored)
-      ? stored
-      : Object.keys(stored || {}).map(function(site) {
-        return { site: site, pref: stored[site] };
-      });
-
-    return list
-      .map(function(item) {
-        return {
-          site: String(item.site || ''),
-          pref: normalizePreference(item.pref)
-        };
-      })
-      .filter(function(item) {
-        return item.site && item.pref;
-      })
-      .sort(function(a, b) {
-        return a.site.localeCompare(b.site);
-      });
+  function readSelectionTranslate() {
+    const legacy = getStoredValue(SELECTION_TRANSLATE_KEY, undefined);
+    const configValue = normalizeConfigBoolean(getConfigValue(CONFIG_KEYS.selectionEnabled, undefined));
+    const resolved = configValue === null ? legacy : configValue;
+    selectionTranslateEnabled = resolved !== false;
+    setStoredValue(CONFIG_KEYS.selectionEnabled, selectionTranslateEnabled);
+    return selectionTranslateEnabled;
   }
 
-  function writeManualSites(sites) {
-    setStoredValue(MANUAL_SITE_LIST_KEY, sites);
+  function normalizeSelectionDirection(value) {
+    const settings = Object.assign({}, DEFAULT_SELECTION_DIRECTION, value || {});
+    settings.smartDetect = settings.smartDetect === true;
+    if (!hasOption(TARGET_LANGUAGE_OPTIONS, settings.langA)) settings.langA = DEFAULT_SELECTION_DIRECTION.langA;
+    if (!hasOption(TARGET_LANGUAGE_OPTIONS, settings.langB)) settings.langB = DEFAULT_SELECTION_DIRECTION.langB;
+    if (settings.langA === settings.langB) {
+      settings.langB = settings.langA === 'zh-Hans' ? 'en' : 'zh-Hans';
+    }
+    return settings;
   }
 
-  function readSitePreference(siteKey) {
-    const key = siteKey || getSiteKey();
-    const manual = readManualSites().find(function(item) {
-      return item.site === key;
+  function readSelectionDirection() {
+    const legacy = getStoredValue(SELECTION_DIRECTION_KEY, null);
+    const legacySettings = legacy && typeof legacy === 'object' && !Array.isArray(legacy) ? legacy : {};
+    const defaultA = languageSettings.from === 'auto' ? 'en' : languageSettings.from;
+    const defaultB = languageSettings.to || FALLBACK_TARGET_LANG;
+
+    const legacySmartDetect = typeof legacySettings.smartDetect === 'boolean'
+      ? legacySettings.smartDetect
+      : (typeof legacySettings.bidirectional === 'boolean' ? legacySettings.bidirectional : null);
+    const configSmartDetect = normalizeConfigBoolean(getConfigValue(CONFIG_KEYS.selectionSmartDetect, undefined));
+    const smartDetect = configSmartDetect === null
+      ? (legacySmartDetect === null ? DEFAULT_SELECTION_DIRECTION.smartDetect : legacySmartDetect)
+      : configSmartDetect;
+
+    selectionDirection = normalizeSelectionDirection({
+      smartDetect: smartDetect,
+      langA: normalizeLanguageValue(getConfigValue(CONFIG_KEYS.selectionLangA, legacySettings.langA), TARGET_LANGUAGE_OPTIONS, defaultA),
+      langB: normalizeLanguageValue(getConfigValue(CONFIG_KEYS.selectionLangB, legacySettings.langB), TARGET_LANGUAGE_OPTIONS, defaultB)
     });
-    if (!manual) return null;
-
-    return normalizePreference(getStoredValue(getPreferenceKey(key), manual.pref)) || manual.pref;
+    persistSelectionDirection();
+    return selectionDirection;
   }
 
-  function trackManualSite(siteKey, pref) {
-    const sites = readManualSites().filter(function(item) {
-      return item.site !== siteKey;
-    });
-    sites.push({ site: siteKey, pref: pref });
-    writeManualSites(sites);
-  }
-
-  function saveSitePreference(value, siteKey) {
-    const key = siteKey || getSiteKey();
-    setStoredValue(getPreferenceKey(key), value);
-    trackManualSite(key, value);
-    if (key === getSiteKey()) sitePreference = value;
-  }
-
-  function isCurrentSiteEnabled() {
-    return sitePreference === null ? defaultSitePreference === PREF_ON : sitePreference !== PREF_OFF;
+  function persistSelectionDirection() {
+    setStoredValue(CONFIG_KEYS.selectionSmartDetect, selectionDirection.smartDetect);
+    setStoredValue(CONFIG_KEYS.selectionLangA, getLanguageConfigLabel(selectionDirection.langA));
+    setStoredValue(CONFIG_KEYS.selectionLangB, getLanguageConfigLabel(selectionDirection.langB));
   }
 
   function readControlPosition() {
@@ -323,49 +451,35 @@
   }
 
   function readTranslatorSettings() {
-    translatorSettings = normalizeTranslatorSettings(getStoredValue(TRANSLATOR_SETTINGS_KEY, DEFAULT_TRANSLATOR_SETTINGS));
+    const legacy = normalizeTranslatorSettings(getStoredValue(TRANSLATOR_SETTINGS_KEY, DEFAULT_TRANSLATOR_SETTINGS));
+    translatorSettings = normalizeTranslatorSettings({
+      engine: normalizeTranslatorValue(getConfigValue(CONFIG_KEYS.engine, legacy.engine)),
+      customUrl: getConfigValue(CONFIG_KEYS.customUrl, legacy.customUrl),
+      customResultPath: getConfigValue(CONFIG_KEYS.customResultPath, legacy.customResultPath)
+    });
+    persistTranslatorSettings();
     return translatorSettings;
   }
 
-  function saveTranslatorSettings(settings) {
-    const nextSettings = normalizeTranslatorSettings(settings);
-    const changed = JSON.stringify(translatorSettings) !== JSON.stringify(nextSettings);
-    translatorSettings = nextSettings;
-    setStoredValue(TRANSLATOR_SETTINGS_KEY, translatorSettings);
-    if (changed) {
-      translatorReady = false;
-      translatorStartPromise = null;
-      translationCache.clear();
-    }
-    return changed;
+  function persistTranslatorSettings() {
+    setStoredValue(CONFIG_KEYS.engine, getTranslatorLabel(translatorSettings.engine));
+    setStoredValue(CONFIG_KEYS.customUrl, translatorSettings.customUrl);
+    setStoredValue(CONFIG_KEYS.customResultPath, translatorSettings.customResultPath);
   }
 
   function readLanguageSettings() {
-    languageSettings = normalizeLanguageSettings(getStoredValue(LANGUAGE_SETTINGS_KEY, DEFAULT_LANGUAGE_SETTINGS));
+    const legacy = normalizeLanguageSettings(getStoredValue(LANGUAGE_SETTINGS_KEY, DEFAULT_LANGUAGE_SETTINGS));
+    languageSettings = normalizeLanguageSettings({
+      from: normalizeLanguageValue(getConfigValue(CONFIG_KEYS.from, legacy.from), SOURCE_LANGUAGE_OPTIONS, DEFAULT_LANGUAGE_SETTINGS.from),
+      to: normalizeLanguageValue(getConfigValue(CONFIG_KEYS.to, legacy.to), TARGET_LANGUAGE_OPTIONS, DEFAULT_LANGUAGE_SETTINGS.to)
+    });
+    persistLanguageSettings();
     return languageSettings;
   }
 
-  function saveLanguageSettings(settings) {
-    const nextSettings = normalizeLanguageSettings(settings);
-    const changed = JSON.stringify(languageSettings) !== JSON.stringify(nextSettings);
-    languageSettings = nextSettings;
-    setStoredValue(LANGUAGE_SETTINGS_KEY, languageSettings);
-    if (changed) {
-      translationCache.clear();
-    }
-    return changed;
-  }
-
-  function restartTranslationIfActive() {
-    if (!siteTranslationEnabled) return;
-    stopDOMObservation();
-    stopContinuousTranslation();
-    restoreOriginalText();
-    startTranslationForSite();
-  }
-
-  function getTranslationSourceLang() {
-    return languageSettings.from === 'auto' ? null : languageSettings.from;
+  function persistLanguageSettings() {
+    setStoredValue(CONFIG_KEYS.from, getLanguageConfigLabel(languageSettings.from));
+    setStoredValue(CONFIG_KEYS.to, getLanguageConfigLabel(languageSettings.to));
   }
 
   function getTranslationTargetLang() {
@@ -380,14 +494,13 @@
   }
 
   function readIconOpacity() {
-    iconDimOpacity = normalizeIconOpacity(getStoredValue(ICON_OPACITY_KEY, DEFAULT_ICON_OPACITY));
+    const legacy = normalizeIconOpacity(getStoredValue(ICON_OPACITY_KEY, DEFAULT_ICON_OPACITY));
+    const configValue = getConfigValue(CONFIG_KEYS.iconOpacity, undefined);
+    iconDimOpacity = normalizeIconOpacity(
+      typeof configValue === 'number' || typeof configValue === 'string' ? configValue : legacy
+    );
+    setStoredValue(CONFIG_KEYS.iconOpacity, Math.round(iconDimOpacity * 100));
     return iconDimOpacity;
-  }
-
-  function saveIconOpacity(value) {
-    iconDimOpacity = normalizeIconOpacity(value);
-    setStoredValue(ICON_OPACITY_KEY, iconDimOpacity);
-    applyIconOpacity();
   }
 
   function applyIconOpacity() {
@@ -417,26 +530,6 @@
     iconDimTimer = setTimeout(dimIconNow, delay || ICON_DIM_DELAY);
   }
 
-  function showInstallHint() {
-    if (!controlRoot || hasSeenInstallHint()) return;
-
-    clearIconDim();
-    const rect = controlRoot.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const direction = centerX > window.innerWidth / 2 ? -1 : 1;
-    controlRoot.style.setProperty('--auto-translate-hint-x', centerX + 'px');
-    controlRoot.style.setProperty('--auto-translate-hint-y', centerY + 'px');
-    controlRoot.style.setProperty('--auto-translate-broadcast-x', String(direction));
-    controlRoot.style.setProperty('--auto-translate-label-offset', direction < 0 ? 'calc(-100% - 12px)' : '12px');
-    controlRoot.dataset.installHint = 'true';
-    setTimeout(function() {
-      if (controlRoot) delete controlRoot.dataset.installHint;
-      markInstallHintSeen();
-      scheduleIconDim();
-    }, INSTALL_HINT_DELAY);
-  }
-
   function injectControlStyle() {
     if (document.getElementById('auto-translate-control-style')) return;
 
@@ -456,8 +549,8 @@
       }
       #auto-translate-control,
       #auto-translate-control *,
-      #auto-translate-settings-page,
-      #auto-translate-settings-page * {
+      #auto-translate-selection,
+      #auto-translate-selection * {
         box-sizing: border-box;
       }
       #auto-translate-control .auto-translate-icon {
@@ -468,7 +561,7 @@
         background: #334155;
         color: #ffffff;
         box-shadow: 0 8px 22px rgba(15, 23, 42, 0.26);
-        cursor: grab;
+        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -486,495 +579,163 @@
       #auto-translate-control[data-dimmed="true"] .auto-translate-icon:hover {
         opacity: 1;
       }
-      #auto-translate-control .auto-translate-icon:active {
-        cursor: grabbing;
-      }
-      #auto-translate-control[data-install-hint="true"] .auto-translate-icon {
-        animation: autoTranslateIconPulse 0.85s ease-in-out infinite;
-      }
-      #auto-translate-control[data-install-hint="true"]::before {
-        content: "";
-        position: fixed;
-        left: var(--auto-translate-hint-x, 24px);
-        top: var(--auto-translate-hint-y, 24px);
-        width: min(1080px, 118vw);
-        height: min(820px, 112vh);
-        background:
-          repeating-radial-gradient(ellipse at 0 0, rgba(20, 184, 166, 0.62) 0 2px, transparent 3px 32px),
-          radial-gradient(ellipse at 18% 20%, rgba(56, 189, 248, 0.42), transparent 42%),
-          radial-gradient(ellipse at 34% 46%, rgba(250, 204, 21, 0.22), transparent 48%),
-          linear-gradient(28deg, rgba(20, 184, 166, 0.35), rgba(59, 130, 246, 0.12), rgba(20, 184, 166, 0));
-        clip-path: polygon(0 0, 100% 14%, 100% 90%, 0 0);
-        filter: saturate(1.4);
-        transform-origin: 0 0;
-        animation: autoTranslateBroadcast 1.15s ease-out infinite;
-        pointer-events: none;
-      }
-      #auto-translate-control[data-install-hint="true"]::after {
-        content: "建议先查看默认设置";
-        position: fixed;
-        left: var(--auto-translate-hint-x, 24px);
-        top: calc(var(--auto-translate-hint-y, 24px) + 46px);
-        transform: translateX(var(--auto-translate-label-offset, 12px));
-        min-width: 150px;
-        padding: 8px 10px;
-        border-radius: 8px;
-        background: #0f172a;
-        color: #ffffff;
-        font-size: 12px;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
-        white-space: nowrap;
-        pointer-events: none;
-      }
-      @keyframes autoTranslateIconPulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.08); }
-      }
-      @keyframes autoTranslateBroadcast {
-        0% {
-          opacity: 0.98;
-          transform: scaleX(var(--auto-translate-broadcast-x, 1)) scale(0.12);
-        }
-        100% {
-          opacity: 0;
-          transform: scaleX(var(--auto-translate-broadcast-x, 1)) scale(1.18);
-        }
-      }
-      #auto-translate-control[data-state="on"] .auto-translate-icon,
-      #auto-translate-control[data-state="default"] .auto-translate-icon {
+      #auto-translate-control[data-state="on"] .auto-translate-icon {
         background: #0f766e;
       }
-      #auto-translate-control .auto-translate-panel {
-        position: absolute;
-        top: 44px;
-        right: 0;
-        width: min(300px, calc(100vw - 24px));
-        padding: 14px;
-        border: 1px solid rgba(148, 163, 184, 0.35);
-        border-radius: 8px;
-        background: #ffffff;
-        box-shadow: 0 14px 38px rgba(15, 23, 42, 0.22);
-      }
-      #auto-translate-control[data-panel-side="left"] .auto-translate-panel {
-        left: 0;
-        right: auto;
-      }
-      #auto-translate-control[data-panel-y="up"] .auto-translate-panel {
-        top: auto;
-        bottom: 44px;
-      }
-      #auto-translate-control .auto-translate-panel-head {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 10px;
-        margin-bottom: 10px;
-      }
-      #auto-translate-control .auto-translate-title {
-        font-size: 15px;
-        font-weight: 700;
-        margin: 0 0 4px;
-      }
-      #auto-translate-control .auto-translate-site {
-        color: #64748b;
-        font-size: 12px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        max-width: 210px;
-      }
-      #auto-translate-control .auto-translate-gear,
-      #auto-translate-settings-page .auto-translate-close {
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        background: #f8fafc;
-        color: #0f172a;
-        cursor: pointer;
-      }
-      #auto-translate-control .auto-translate-gear {
-        width: 28px;
-        height: 28px;
-        flex: 0 0 auto;
-        font-size: 16px;
-        padding: 0;
-      }
-      #auto-translate-control .auto-translate-status {
-        color: #475569;
-        font-size: 13px;
-        margin-bottom: 12px;
-      }
-      #auto-translate-control .auto-translate-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-      }
-      #auto-translate-control .auto-translate-choice {
-        min-height: 34px;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        background: #f8fafc;
-        color: #0f172a;
-        cursor: pointer;
-        font-size: 14px;
-        padding: 7px 10px;
-      }
-      #auto-translate-control .auto-translate-choice.is-active {
-        border-color: #0f766e;
-        background: #ecfdf5;
-        color: #0f766e;
-        font-weight: 700;
-      }
-      #auto-translate-control button:hover,
-      #auto-translate-settings-page button:hover {
-        filter: brightness(0.97);
-      }
-      #auto-translate-settings-page {
+      #auto-translate-selection {
         position: fixed;
         inset: 0;
-        z-index: 2147483647;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 14px;
+        z-index: 2147483646;
+        pointer-events: none;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         color: #111827;
         font-size: 14px;
         line-height: 1.45;
         letter-spacing: 0;
       }
-      #auto-translate-settings-page[hidden] {
+      #auto-translate-selection[hidden],
+      #auto-translate-selection [hidden] {
         display: none !important;
       }
-      #auto-translate-settings-page .auto-translate-backdrop {
-        position: absolute;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.42);
-      }
-      #auto-translate-settings-page .auto-translate-settings {
-        position: relative;
-        width: min(760px, calc(100vw - 28px));
-        max-height: min(760px, calc(100vh - 28px));
-        overflow: auto;
-        background: #f8fafc;
-        border-radius: 8px;
-        box-shadow: 0 18px 50px rgba(15, 23, 42, 0.28);
-        border: 1px solid rgba(148, 163, 184, 0.38);
-      }
-      #auto-translate-settings-page .auto-translate-settings-head {
-        display: flex;
+      #auto-translate-selection .auto-translate-selection-toolbar {
+        position: fixed;
+        display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 16px 18px;
-        border-bottom: 1px solid #e2e8f0;
-        background: #ffffff;
+        gap: 2px;
+        padding: 3px;
+        border-radius: 999px;
+        background: #0f172a;
+        box-shadow: 0 10px 26px rgba(15, 23, 42, 0.3);
+        pointer-events: auto;
       }
-      #auto-translate-settings-page h2,
-      #auto-translate-settings-page h3 {
-        margin: 0;
-        font-size: 16px;
+      #auto-translate-selection .auto-translate-selection-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 32px;
+        border: 0;
+        border-radius: 999px;
+        background: #0f172a;
+        color: #ffffff;
+        cursor: pointer;
+        padding: 5px 12px 5px 7px;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1;
+        user-select: none;
       }
-      #auto-translate-settings-page h3 {
-        margin-bottom: 10px;
+      #auto-translate-selection .auto-translate-selection-button:hover {
+        background: #1e293b;
       }
-      #auto-translate-settings-page .auto-translate-close {
-        width: 32px;
-        height: 32px;
-        font-size: 20px;
+      #auto-translate-selection .auto-translate-selection-speak {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 34px;
+        min-height: 32px;
+        border: 0;
+        border-radius: 999px;
+        background: #0f172a;
+        color: #ffffff;
+        cursor: pointer;
+        padding: 5px 9px;
+        font-size: 15px;
         line-height: 1;
       }
-      #auto-translate-settings-page .auto-translate-settings-body {
-        display: grid;
-        gap: 12px;
-        padding: 14px 16px 16px;
+      #auto-translate-selection .auto-translate-selection-speak:hover {
+        background: #1e293b;
       }
-      #auto-translate-settings-page .auto-translate-section {
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 14px;
+      #auto-translate-selection .auto-translate-selection-mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border-radius: 999px;
+        background: #0f766e;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      #auto-translate-selection .auto-translate-selection-result {
+        position: fixed;
+        display: flex;
+        flex-direction: column;
+        width: min(380px, calc(100vw - 24px));
+        max-height: min(320px, 52vh);
+        border: 1px solid rgba(148, 163, 184, 0.38);
+        border-radius: 10px;
         background: #ffffff;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.26);
+        pointer-events: auto;
+        overflow: hidden;
       }
-      #auto-translate-settings-page label {
-        display: grid;
-        gap: 6px;
-        color: #334155;
-        font-size: 13px;
-        margin-bottom: 10px;
-      }
-      #auto-translate-settings-page input {
-        width: 100%;
-        min-height: 36px;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        padding: 7px 9px;
-        color: #0f172a;
-        background: #ffffff;
-        font-size: 14px;
-      }
-      #auto-translate-settings-page .auto-translate-field {
-        display: grid;
-        gap: 6px;
-        color: #334155;
-        font-size: 13px;
-      }
-      #auto-translate-settings-page .auto-translate-dropdown {
-        position: relative;
-        min-width: 0;
-      }
-      #auto-translate-settings-page .auto-translate-dropdown-button {
-        width: 100%;
-        min-height: 36px;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        background: #ffffff;
-        color: #0f172a;
-        cursor: pointer;
+      #auto-translate-selection .auto-translate-selection-result-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
-        padding: 7px 9px;
-        font-size: 14px;
-        text-align: left;
-      }
-      #auto-translate-settings-page .auto-translate-dropdown-button:focus-visible,
-      #auto-translate-settings-page .auto-translate-icon-button:focus-visible,
-      #auto-translate-settings-page input:focus-visible {
-        border-color: #0f766e;
-        outline: 2px solid rgba(20, 184, 166, 0.24);
-        outline-offset: 2px;
-      }
-      #auto-translate-settings-page .auto-translate-dropdown-arrow {
-        color: #64748b;
-        font-size: 12px;
-        flex: 0 0 auto;
-      }
-      #auto-translate-settings-page .auto-translate-dropdown-menu {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: auto;
-        z-index: 2147483647;
-        max-height: 216px;
-        overflow-y: auto;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        background: #ffffff;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
-        padding: 4px;
-      }
-      #auto-translate-settings-page .auto-translate-dropdown[data-side="left"] .auto-translate-dropdown-menu {
-        left: auto;
-        right: calc(100% + 8px);
-      }
-      #auto-translate-settings-page .auto-translate-dropdown[data-side="right"] .auto-translate-dropdown-menu {
-        left: calc(100% + 8px);
-        right: auto;
-      }
-      #auto-translate-settings-page .auto-translate-dropdown-option {
-        width: 100%;
-        min-height: 34px;
-        border: 0;
-        border-radius: 6px;
-        background: transparent;
-        color: #0f172a;
-        cursor: pointer;
-        display: block;
-        padding: 7px 8px;
-        text-align: left;
-        font-size: 14px;
-      }
-      #auto-translate-settings-page .auto-translate-dropdown-option:hover,
-      #auto-translate-settings-page .auto-translate-dropdown-option.is-active {
-        background: #ecfdf5;
-        color: #0f766e;
-      }
-      #auto-translate-settings-page .auto-translate-dropdown.is-disabled .auto-translate-dropdown-button {
-        cursor: default;
-        color: #94a3b8;
-        background: #f8fafc;
-      }
-      #auto-translate-settings-page .auto-translate-hint {
-        margin: 0 0 10px;
-        color: #64748b;
-        font-size: 12px;
-      }
-      #auto-translate-settings-page .auto-translate-setting-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
-      }
-      #auto-translate-settings-page [hidden] {
-        display: none !important;
-      }
-      #auto-translate-settings-page .auto-translate-toggle-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 150px 52px;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 12px;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        background: #f8fafc;
-      }
-      #auto-translate-settings-page .auto-translate-default-row {
-        grid-template-columns: minmax(0, 1fr) 150px;
-      }
-      #auto-translate-settings-page .auto-translate-prompt-row {
-        grid-template-columns: minmax(0, 1fr) 52px;
-        margin-top: 10px;
-      }
-      #auto-translate-settings-page .auto-translate-title-switch {
-        display: inline-flex;
-        align-items: center;
         gap: 10px;
-        max-width: 100%;
+        padding: 8px 10px 8px 12px;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
       }
-      #auto-translate-settings-page .auto-translate-compact-label {
-        margin: 0;
-      }
-      #auto-translate-settings-page .auto-translate-compact-label input {
-        min-height: 34px;
-      }
-      #auto-translate-settings-page .auto-translate-toggle-title {
+      #auto-translate-selection .auto-translate-selection-result-title {
         color: #0f172a;
+        font-size: 13px;
         font-weight: 700;
-        margin-bottom: 2px;
       }
-      #auto-translate-settings-page .auto-translate-toggle-subtitle {
-        color: #64748b;
-        font-size: 12px;
-      }
-      #auto-translate-settings-page .auto-translate-switch {
-        position: relative;
+      #auto-translate-selection .auto-translate-selection-result-actions {
         display: inline-flex;
-        width: 52px;
-        height: 30px;
-        flex: 0 0 auto;
-        margin: 0;
+        align-items: center;
+        gap: 6px;
+        margin-left: auto;
       }
-      #auto-translate-settings-page .auto-translate-switch input {
-        position: absolute;
-        opacity: 0;
-        width: 1px;
-        height: 1px;
-      }
-      #auto-translate-settings-page .auto-translate-switch span {
-        position: absolute;
-        inset: 0;
-        border-radius: 999px;
-        background: #cbd5e1;
-        transition: background 0.18s ease;
-        cursor: pointer;
-      }
-      #auto-translate-settings-page .auto-translate-switch span::before {
-        content: "";
-        position: absolute;
+      #auto-translate-selection .auto-translate-selection-speak-result {
         width: 24px;
         height: 24px;
-        top: 3px;
-        left: 3px;
-        border-radius: 999px;
-        background: #ffffff;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
-        transition: transform 0.18s ease;
-      }
-      #auto-translate-settings-page .auto-translate-switch input:checked + span {
-        background: #0f766e;
-      }
-      #auto-translate-settings-page .auto-translate-switch input:checked + span::before {
-        transform: translateX(22px);
-      }
-      #auto-translate-settings-page .auto-translate-sites {
-        display: grid;
-        gap: 10px;
-      }
-      #auto-translate-settings-page .auto-translate-section-title-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        margin-bottom: 10px;
-      }
-      #auto-translate-settings-page .auto-translate-section-title-row h3 {
-        margin-bottom: 0;
-      }
-      #auto-translate-settings-page .auto-translate-icon-button {
-        width: 34px;
-        height: 34px;
         border: 1px solid #cbd5e1;
-        border-radius: 8px;
+        border-radius: 6px;
         background: #ffffff;
         color: #0f172a;
         cursor: pointer;
-        font-size: 15px;
+        font-size: 14px;
+        line-height: 1;
         padding: 0;
       }
-      #auto-translate-settings-page .auto-translate-site-search {
-        margin-bottom: 10px;
-        width: min(42%, 360px);
-        min-width: 220px;
-      }
-      #auto-translate-settings-page .auto-translate-site-picker {
-        display: grid;
-        grid-template-columns: 360px max-content;
-        gap: 10px;
-        align-items: end;
-        width: min(100%, 540px);
-        max-width: 100%;
-        justify-content: start;
-      }
-      #auto-translate-settings-page .auto-translate-site-picker > .auto-translate-field {
-        width: 100%;
-        max-width: 360px;
-      }
-      #auto-translate-settings-page .auto-translate-site-picker .auto-translate-toggle-row {
-        grid-template-columns: max-content 52px;
-        gap: 8px;
-        min-height: 36px;
-        padding: 3px 8px 3px 10px;
+      #auto-translate-selection .auto-translate-selection-close {
+        width: 24px;
+        height: 24px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
         background: #ffffff;
-      }
-      #auto-translate-settings-page .auto-translate-site-picker .auto-translate-toggle-title {
-        margin: 0;
-        font-size: 13px;
+        color: #0f172a;
+        cursor: pointer;
+        font-size: 16px;
         line-height: 1;
-        white-space: nowrap;
+        padding: 0;
       }
-      #auto-translate-settings-page .auto-translate-site-picker .auto-translate-toggle-subtitle {
-        display: none;
+      #auto-translate-selection .auto-translate-selection-result-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 10px 12px;
+        color: #0f172a;
+        font-size: 14px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow: auto;
+        user-select: text;
       }
-      #auto-translate-settings-page .auto-translate-empty {
-        margin: 0;
+      #auto-translate-selection .auto-translate-selection-result[data-state="loading"] .auto-translate-selection-result-body {
         color: #64748b;
       }
-      @media (max-width: 520px) {
-        #auto-translate-settings-page .auto-translate-setting-grid,
-        #auto-translate-settings-page .auto-translate-toggle-row,
-        #auto-translate-settings-page .auto-translate-site-picker {
-          grid-template-columns: 1fr;
-        }
-        #auto-translate-settings-page .auto-translate-default-row {
-          grid-template-columns: 1fr;
-        }
-        #auto-translate-settings-page .auto-translate-prompt-row {
-          grid-template-columns: minmax(0, 1fr) 52px;
-        }
-        #auto-translate-settings-page .auto-translate-site-search {
-          width: 100%;
-          min-width: 0;
-        }
-        #auto-translate-settings-page .auto-translate-site-picker {
-          width: 100%;
-        }
-        #auto-translate-settings-page .auto-translate-site-picker > .auto-translate-field {
-          max-width: none;
-        }
-        #auto-translate-settings-page .auto-translate-site-picker .auto-translate-toggle-row {
-          grid-template-columns: max-content 52px;
-          justify-content: start;
-        }
+      #auto-translate-selection .auto-translate-selection-result[data-state="error"] .auto-translate-selection-result-body {
+        color: #b91c1c;
+      }
+      #auto-translate-selection .auto-translate-selection-result-note {
+        padding: 0 12px 10px;
+        color: #94a3b8;
+        font-size: 12px;
       }
     `;
     (document.head || document.documentElement).appendChild(style);
@@ -992,21 +753,7 @@
     controlRoot.setAttribute('data-protect-translation', 'true');
     controlRoot.setAttribute('data-auto-translate-ui', 'true');
     controlRoot.innerHTML = `
-      <button type="button" class="auto-translate-icon" data-role="icon" aria-label="自动翻译设置" title="自动翻译设置">译</button>
-      <div class="auto-translate-panel" data-role="panel" hidden>
-        <div class="auto-translate-panel-head">
-          <div>
-            <div class="auto-translate-title">翻译此网站？</div>
-            <div class="auto-translate-site" data-role="site"></div>
-          </div>
-          <button type="button" class="auto-translate-gear" data-action="settings" aria-label="设置" title="设置">⚙</button>
-        </div>
-        <div class="auto-translate-status" data-role="status"></div>
-        <div class="auto-translate-actions">
-          <button type="button" class="auto-translate-choice" data-action="enable">翻译</button>
-          <button type="button" class="auto-translate-choice" data-action="disable">不翻译</button>
-        </div>
-      </div>
+      <button type="button" class="auto-translate-icon" data-role="icon" aria-label="自动翻译" aria-pressed="false" title="点击翻译当前网页，拖动可移动">译</button>
     `;
 
     document.body.appendChild(controlRoot);
@@ -1025,25 +772,7 @@
         suppressNextIconClick = false;
         return;
       }
-
-      const panel = controlRoot.querySelector('[data-role="panel"]');
-      if (panel.hidden) {
-        showControlPanel();
-      } else {
-        hideControlPanel();
-      }
-    });
-
-    controlRoot.querySelector('[data-action="enable"]').addEventListener('click', function() {
-      chooseSitePreference(PREF_ON);
-    });
-
-    controlRoot.querySelector('[data-action="disable"]').addEventListener('click', function() {
-      chooseSitePreference(PREF_OFF);
-    });
-
-    controlRoot.querySelector('[data-action="settings"]').addEventListener('click', function() {
-      openSettingsPage();
+      toggleTranslation();
     });
 
     updateControlUi();
@@ -1094,7 +823,6 @@
 
     draggingControl = true;
     suppressNextIconClick = true;
-    hideControlPanel();
 
     const position = clampControlPosition(dragStartLeft + deltaX, dragStartTop + deltaY);
     controlRoot.style.left = position.left + 'px';
@@ -1120,497 +848,31 @@
   function updateControlUi() {
     if (!controlRoot) return;
 
-    const enabled = isCurrentSiteEnabled();
-    const isDefault = sitePreference === null;
     const icon = controlRoot.querySelector('[data-role="icon"]');
-    const site = controlRoot.querySelector('[data-role="site"]');
-    const status = controlRoot.querySelector('[data-role="status"]');
-    const enableButton = controlRoot.querySelector('[data-action="enable"]');
-    const disableButton = controlRoot.querySelector('[data-action="disable"]');
-
-    controlRoot.dataset.state = enabled ? (isDefault ? 'default' : 'on') : 'off';
-    icon.title = enabled ? '自动翻译已开启，拖动可移动，点击可更改' : '自动翻译未开启，拖动可移动，点击可更改';
-    site.textContent = getSiteKey();
-    status.textContent = isDefault ? (enabled ? '当前：默认翻译' : '当前：默认不翻译') : (enabled ? '当前：翻译' : '当前：不翻译');
-    enableButton.classList.toggle('is-active', enabled);
-    disableButton.classList.toggle('is-active', !enabled);
-    enableButton.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-    disableButton.setAttribute('aria-pressed', enabled ? 'false' : 'true');
+    controlRoot.dataset.state = translationEnabled ? 'on' : 'off';
+    icon.title = translationEnabled
+      ? '已翻译，点击还原原文，拖动可移动'
+      : '点击翻译当前网页，拖动可移动';
+    icon.setAttribute('aria-pressed', translationEnabled ? 'true' : 'false');
   }
 
-  function updatePanelPlacement() {
-    if (!controlRoot) return;
-    const rect = controlRoot.getBoundingClientRect();
-    controlRoot.dataset.panelSide = rect.left < 310 ? 'left' : 'right';
-    controlRoot.dataset.panelY = rect.top > window.innerHeight - 260 ? 'up' : 'down';
-  }
-
-  function showControlPanel() {
-    ensureControlUi();
-    if (!controlRoot) return;
-
-    clearIconDim();
-    updatePanelPlacement();
-    const panel = controlRoot.querySelector('[data-role="panel"]');
-    panel.hidden = false;
-
-  }
-
-  function hideControlPanel() {
-    if (!controlRoot) return;
-    controlRoot.querySelector('[data-role="panel"]').hidden = true;
+  function toggleTranslation() {
+    if (translationEnabled) {
+      disableTranslation();
+    } else {
+      enableTranslation();
+    }
     scheduleIconDim();
   }
 
-  function chooseSitePreference(value) {
-    saveSitePreference(value);
-    hideControlPanel();
-    if (value === PREF_ON) {
-      enableSiteTranslation();
-    } else {
-      disableSiteTranslation();
-    }
-    updateControlUi();
-    renderManualSites();
-    dimIconNow();
-  }
-
-  function closeSettingsDropdowns(exceptRoot) {
-    if (!settingsRoot) return;
-    settingsRoot.querySelectorAll('.auto-translate-dropdown-menu').forEach(function(menu) {
-      if (!exceptRoot || !exceptRoot.contains(menu)) menu.hidden = true;
-    });
-  }
-
-  function positionDropdownMenu(root) {
-    if (!settingsRoot || !root) return;
-
-    const menu = root.querySelector('.auto-translate-dropdown-menu');
-    const modal = settingsRoot.querySelector('.auto-translate-settings');
-    if (!menu || !modal) return;
-
-    const rootRect = root.getBoundingClientRect();
-    const modalRect = modal.getBoundingClientRect();
-    const gap = 8;
-    const viewportGap = 12;
-    const isManualSiteDropdown = root.getAttribute('data-role') === 'manual-site-select';
-    if (isManualSiteDropdown) {
-      const width = Math.max(220, rootRect.width);
-      const maxHeight = 212;
-      const menuHeight = Math.min(menu.scrollHeight || maxHeight, maxHeight);
-      const left = Math.max(viewportGap, Math.min(rootRect.left, window.innerWidth - width - viewportGap));
-      const top = Math.max(viewportGap, rootRect.top - menuHeight - gap);
-
-      root.dataset.side = 'up';
-      menu.style.width = width + 'px';
-      menu.style.maxHeight = maxHeight + 'px';
-      menu.style.left = left + 'px';
-      menu.style.right = 'auto';
-      menu.style.top = top + 'px';
-      return;
-    }
-
-    const minWidth = Math.max(180, rootRect.width);
-    const preferredWidth = Math.max(220, rootRect.width);
-    const leftSpace = Math.max(0, rootRect.left - modalRect.left - gap);
-    const rightSpace = Math.max(0, modalRect.right - rootRect.right - gap);
-    const defaultSide = rootRect.left + rootRect.width / 2 > modalRect.left + modalRect.width / 2 ? 'left' : 'right';
-
-    let side = defaultSide;
-    if (side === 'right' && rightSpace < minWidth && leftSpace > rightSpace) side = 'left';
-    if (side === 'left' && leftSpace < minWidth && rightSpace > leftSpace) side = 'right';
-
-    const viewportSpace = side === 'left'
-      ? Math.max(0, rootRect.left - gap - viewportGap)
-      : Math.max(0, window.innerWidth - rootRect.right - gap - viewportGap);
-    const available = Math.min(side === 'left' ? leftSpace : rightSpace, viewportSpace);
-    const width = Math.max(140, Math.min(preferredWidth, available || preferredWidth));
-    const menuHeight = Math.min(menu.scrollHeight || 216, 216);
-    const rawLeft = side === 'left' ? rootRect.left - gap - width : rootRect.right + gap;
-    const left = Math.max(viewportGap, Math.min(rawLeft, window.innerWidth - width - viewportGap));
-    const top = Math.max(viewportGap, Math.min(rootRect.top, window.innerHeight - menuHeight - viewportGap));
-
-    root.dataset.side = side;
-    menu.style.width = width + 'px';
-    menu.style.left = left + 'px';
-    menu.style.right = 'auto';
-    menu.style.top = top + 'px';
-  }
-
-  function renderDropdown(root, options, value, onChange) {
-    if (!root) return;
-
-    const list = Array.isArray(options) ? options : [];
-    const active = list.find(function(option) {
-      return option.value === value;
-    }) || list[0] || { value: '', label: '暂无选项' };
-
-    root.className = 'auto-translate-dropdown' + (list.length === 0 ? ' is-disabled' : '');
-    root.dataset.value = active.value;
-    root.innerHTML = '';
-
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'auto-translate-dropdown-button';
-    button.disabled = list.length === 0;
-    button.innerHTML = '<span data-role="dropdown-label"></span><span class="auto-translate-dropdown-arrow">▾</span>';
-    button.querySelector('[data-role="dropdown-label"]').textContent = active.label;
-
-    const menu = document.createElement('div');
-    menu.className = 'auto-translate-dropdown-menu';
-    menu.hidden = true;
-
-    list.forEach(function(option) {
-      const optionButton = document.createElement('button');
-      optionButton.type = 'button';
-      optionButton.className = 'auto-translate-dropdown-option' + (option.value === active.value ? ' is-active' : '');
-      optionButton.textContent = option.label;
-      optionButton.addEventListener('click', function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        root.dataset.value = option.value;
-        button.querySelector('[data-role="dropdown-label"]').textContent = option.label;
-        menu.hidden = true;
-        menu.querySelectorAll('.auto-translate-dropdown-option').forEach(function(item) {
-          item.classList.toggle('is-active', item === optionButton);
-        });
-        if (typeof onChange === 'function') onChange(option.value);
-      });
-      menu.appendChild(optionButton);
-    });
-
-    button.addEventListener('click', function(event) {
-      event.preventDefault();
-      event.stopPropagation();
-      if (list.length === 0) return;
-      const shouldOpen = menu.hidden;
-      closeSettingsDropdowns(root);
-      if (shouldOpen) {
-        menu.hidden = false;
-        positionDropdownMenu(root);
-      } else {
-        menu.hidden = true;
-      }
-    });
-
-    root.appendChild(button);
-    root.appendChild(menu);
-  }
-
-  function getDropdownValue(role) {
-    if (!settingsRoot) return '';
-    const root = settingsRoot.querySelector('[data-role="' + role + '"]');
-    return root ? root.dataset.value || '' : '';
-  }
-
-  function ensureSettingsPage() {
-    if (settingsRoot || !document.body) return;
-
-    injectControlStyle();
-    settingsRoot = document.createElement('div');
-    settingsRoot.id = 'auto-translate-settings-page';
-    settingsRoot.className = 'auto-translate-settings-page no-translate script-element';
-    settingsRoot.hidden = true;
-    settingsRoot.setAttribute('translate', 'no');
-    settingsRoot.setAttribute('data-no-translate', 'true');
-    settingsRoot.setAttribute('data-protect-translation', 'true');
-    settingsRoot.setAttribute('data-auto-translate-ui', 'true');
-    settingsRoot.innerHTML = `
-      <div class="auto-translate-backdrop" data-action="close-settings"></div>
-      <section class="auto-translate-settings" role="dialog" aria-modal="true" aria-label="自动翻译设置">
-        <div class="auto-translate-settings-head">
-          <h2>自动翻译设置</h2>
-          <button type="button" class="auto-translate-close" data-action="close-settings" aria-label="关闭">×</button>
-        </div>
-        <div class="auto-translate-settings-body">
-          <div class="auto-translate-section">
-            <h3>默认行为</h3>
-            <div class="auto-translate-toggle-row auto-translate-default-row">
-              <div>
-                <div class="auto-translate-title-switch">
-                  <div class="auto-translate-toggle-title">默认是否自动翻译</div>
-                  <label class="auto-translate-switch" title="默认翻译开关">
-                    <input type="checkbox" data-role="default-translate">
-                    <span></span>
-                  </label>
-                </div>
-                <div class="auto-translate-toggle-subtitle">关闭后，只有手动选择“翻译”的网站才会自动翻译。</div>
-              </div>
-              <label class="auto-translate-compact-label">
-                图标透明度（%）
-                <input type="number" min="10" max="100" step="5" data-role="icon-opacity">
-              </label>
-            </div>
-            <div class="auto-translate-toggle-row auto-translate-prompt-row">
-              <div>
-                <div class="auto-translate-toggle-title">每个网页都提示是否翻译</div>
-                <div class="auto-translate-toggle-subtitle">开启后，进入网页会自动打开右上角提示弹窗。</div>
-              </div>
-              <label class="auto-translate-switch" title="每个网页都提示是否翻译">
-                <input type="checkbox" data-role="prompt-every-page">
-                <span></span>
-              </label>
-            </div>
-          </div>
-          <div class="auto-translate-section">
-            <h3>翻译服务</h3>
-            <div class="auto-translate-setting-grid">
-              <div class="auto-translate-field">
-                <div>服务</div>
-                <div data-role="translator-engine"></div>
-              </div>
-              <div class="auto-translate-field">
-                <div>从</div>
-                <div data-role="source-language"></div>
-              </div>
-              <div class="auto-translate-field">
-                <div>翻译为</div>
-                <div data-role="target-language"></div>
-              </div>
-            </div>
-            <div data-role="custom-fields" hidden>
-              <label>
-                接口地址
-                <input type="text" data-role="custom-url" placeholder="https://example.com/translate?q={text}&from={from}&to={to}">
-              </label>
-              <label>
-                结果字段
-                <input type="text" data-role="custom-path" placeholder="translatedText">
-              </label>
-              <p class="auto-translate-hint">可用占位符：{text}、{from}、{to}</p>
-            </div>
-            <p class="auto-translate-hint">图标 5 秒无操作后会按设定透明度淡化。</p>
-          </div>
-          <div class="auto-translate-section">
-            <div class="auto-translate-section-title-row">
-              <h3>手动操作过的网站</h3>
-              <button type="button" class="auto-translate-icon-button" data-action="toggle-site-search" aria-label="搜索网站" title="搜索网站">⌕</button>
-            </div>
-            <div class="auto-translate-sites" data-role="manual-sites">
-              <label class="auto-translate-site-search" data-role="manual-site-search-wrap" hidden>
-                搜索网站
-                <input type="search" data-role="manual-site-search" placeholder="输入关键字">
-              </label>
-              <div class="auto-translate-site-picker">
-                <div class="auto-translate-field">
-                  <div>网站</div>
-                  <div data-role="manual-site-select"></div>
-                </div>
-                <div class="auto-translate-toggle-row">
-                  <div>
-                    <div class="auto-translate-toggle-title">是否翻译</div>
-                    <div class="auto-translate-toggle-subtitle" data-role="manual-site-pref-text"></div>
-                  </div>
-                  <label class="auto-translate-switch" title="是否翻译">
-                    <input type="checkbox" data-role="manual-site-pref">
-                    <span></span>
-                  </label>
-                </div>
-              </div>
-              <p class="auto-translate-empty" data-role="manual-site-empty" hidden>暂无匹配的网站</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    `;
-    document.body.appendChild(settingsRoot);
-
-    settingsRoot.addEventListener('click', function(event) {
-      const action = event.target && event.target.getAttribute('data-action');
-      if (!event.target.closest('.auto-translate-dropdown')) closeSettingsDropdowns();
-      if (action === 'close-settings') closeSettingsPage();
-      if (action === 'toggle-site-search') toggleManualSiteSearch();
-    });
-
-    settingsRoot.querySelector('[data-role="default-translate"]').addEventListener('change', applyDefaultSettingFromForm);
-    settingsRoot.querySelector('[data-role="prompt-every-page"]').addEventListener('change', applyPromptEveryPageFromForm);
-    settingsRoot.querySelector('[data-role="icon-opacity"]').addEventListener('input', applyIconOpacityFromForm);
-    settingsRoot.querySelector('[data-role="custom-url"]').addEventListener('change', applyTranslatorSettingsFromForm);
-    settingsRoot.querySelector('[data-role="custom-path"]').addEventListener('change', applyTranslatorSettingsFromForm);
-    settingsRoot.querySelector('[data-role="manual-site-search"]').addEventListener('input', renderManualSites);
-    settingsRoot.querySelector('[data-role="manual-site-pref"]').addEventListener('change', applyManualSitePreferenceFromForm);
-  }
-
-  function openSettingsPage() {
-    hideControlPanel();
-    ensureSettingsPage();
-    renderSettingsPage();
-    settingsRoot.hidden = false;
-  }
-
-  function closeSettingsPage() {
-    if (settingsRoot) settingsRoot.hidden = true;
-  }
-
-  function renderSettingsPage() {
-    if (!settingsRoot) return;
-
-    renderDropdown(settingsRoot.querySelector('[data-role="translator-engine"]'), TRANSLATOR_OPTIONS, translatorSettings.engine, function() {
-      applyTranslatorSettingsFromForm();
-      updateCustomFieldsVisibility();
-    });
-    renderDropdown(settingsRoot.querySelector('[data-role="source-language"]'), SOURCE_LANGUAGE_OPTIONS, languageSettings.from, function() {
-      applyLanguageSettingsFromForm();
-    });
-    renderDropdown(settingsRoot.querySelector('[data-role="target-language"]'), TARGET_LANGUAGE_OPTIONS, languageSettings.to, function() {
-      applyLanguageSettingsFromForm();
-    });
-
-    settingsRoot.querySelector('[data-role="custom-url"]').value = translatorSettings.customUrl;
-    settingsRoot.querySelector('[data-role="custom-path"]').value = translatorSettings.customResultPath;
-    settingsRoot.querySelector('[data-role="icon-opacity"]').value = Math.round(iconDimOpacity * 100);
-    settingsRoot.querySelector('[data-role="default-translate"]').checked = defaultSitePreference === PREF_ON;
-    settingsRoot.querySelector('[data-role="prompt-every-page"]').checked = promptEveryPage;
-    updateCustomFieldsVisibility();
-    renderManualSites();
-  }
-
-  function updateCustomFieldsVisibility() {
-    if (!settingsRoot) return;
-    const engine = getDropdownValue('translator-engine') || translatorSettings.engine;
-    settingsRoot.querySelector('[data-role="custom-fields"]').hidden = engine !== 'custom';
-  }
-
-  function applyTranslatorSettingsFromForm() {
-    if (!settingsRoot) return;
-
-    const nextSettings = {
-      engine: getDropdownValue('translator-engine') || translatorSettings.engine,
-      customUrl: settingsRoot.querySelector('[data-role="custom-url"]').value.trim(),
-      customResultPath: settingsRoot.querySelector('[data-role="custom-path"]').value.trim() || DEFAULT_TRANSLATOR_SETTINGS.customResultPath
-    };
-
-    if (saveTranslatorSettings(nextSettings)) {
-      restartTranslationIfActive();
-    }
-  }
-
-  function applyLanguageSettingsFromForm() {
-    if (!settingsRoot) return;
-    const changed = saveLanguageSettings({
-      from: getDropdownValue('source-language') || languageSettings.from,
-      to: getDropdownValue('target-language') || languageSettings.to
-    });
-    if (changed) restartTranslationIfActive();
-  }
-
-  function applyIconOpacityFromForm() {
-    if (!settingsRoot) return;
-    saveIconOpacity(settingsRoot.querySelector('[data-role="icon-opacity"]').value);
-    dimIconNow();
-  }
-
-  function applyDefaultSettingFromForm() {
-    if (!settingsRoot) return;
-    saveDefaultSitePreference(settingsRoot.querySelector('[data-role="default-translate"]').checked ? PREF_ON : PREF_OFF);
-    if (sitePreference === null) {
-      if (defaultSitePreference === PREF_ON) {
-        enableSiteTranslation();
-      } else {
-        disableSiteTranslation();
-      }
-      updateControlUi();
-    }
-  }
-
-  function applyPromptEveryPageFromForm() {
-    if (!settingsRoot) return;
-    savePromptEveryPage(settingsRoot.querySelector('[data-role="prompt-every-page"]').checked);
-  }
-
-  function toggleManualSiteSearch() {
-    if (!settingsRoot) return;
-    const wrap = settingsRoot.querySelector('[data-role="manual-site-search-wrap"]');
-    const input = settingsRoot.querySelector('[data-role="manual-site-search"]');
-    if (!wrap || !input) return;
-    wrap.hidden = !wrap.hidden;
-    if (!wrap.hidden) {
-      input.focus();
-    } else {
-      input.value = '';
-      renderManualSites();
-    }
-  }
-
-  function renderManualSites() {
-    if (!settingsRoot) return;
-
-    const searchInput = settingsRoot.querySelector('[data-role="manual-site-search"]');
-    const siteDropdown = settingsRoot.querySelector('[data-role="manual-site-select"]');
-    const prefSwitch = settingsRoot.querySelector('[data-role="manual-site-pref"]');
-    const empty = settingsRoot.querySelector('[data-role="manual-site-empty"]');
-    if (!searchInput || !siteDropdown || !prefSwitch || !empty) return;
-
-    const previousValue = siteDropdown.dataset.value || '';
-    const keyword = searchInput.value.trim().toLowerCase();
-    const sites = readManualSites();
-    const matches = sites.filter(function(item) {
-      return !keyword || item.site.toLowerCase().indexOf(keyword) !== -1;
-    });
-
-    const selectedValue = matches.some(function(item) { return item.site === previousValue; })
-      ? previousValue
-      : (matches[0] ? matches[0].site : '');
-    renderDropdown(siteDropdown, matches.map(function(item) {
-      return { value: item.site, label: item.site };
-    }), selectedValue, updateManualSitePrefControl);
-
-    prefSwitch.disabled = matches.length === 0;
-    empty.hidden = matches.length !== 0;
-    empty.textContent = sites.length === 0 ? '暂无手动设置的网站' : '暂无匹配的网站';
-    updateManualSitePrefControl();
-  }
-
-  function updateManualSitePrefControl() {
-    if (!settingsRoot) return;
-
-    const siteDropdown = settingsRoot.querySelector('[data-role="manual-site-select"]');
-    const prefSwitch = settingsRoot.querySelector('[data-role="manual-site-pref"]');
-    const prefText = settingsRoot.querySelector('[data-role="manual-site-pref-text"]');
-    if (!siteDropdown || !prefSwitch || !prefText) return;
-
-    const site = siteDropdown.dataset.value || '';
-    if (!site) {
-      prefSwitch.disabled = true;
-      prefSwitch.checked = false;
-      prefText.textContent = '未选择网站';
-      return;
-    }
-
-    const pref = readSitePreference(site) || PREF_ON;
-    prefSwitch.disabled = false;
-    prefSwitch.checked = pref === PREF_ON;
-    prefText.textContent = pref === PREF_ON ? '当前：翻译' : '当前：不翻译';
-  }
-
-  function applyManualSitePreferenceFromForm() {
-    if (!settingsRoot) return;
-
-    const siteDropdown = settingsRoot.querySelector('[data-role="manual-site-select"]');
-    const prefSwitch = settingsRoot.querySelector('[data-role="manual-site-pref"]');
-    if (!siteDropdown || !prefSwitch || !siteDropdown.dataset.value) return;
-
-    const pref = prefSwitch.checked ? PREF_ON : PREF_OFF;
-    saveSitePreference(pref, siteDropdown.dataset.value);
-    updateManualSitePrefControl();
-    if (siteDropdown.dataset.value === getSiteKey()) {
-      if (pref === PREF_OFF) {
-        disableSiteTranslation();
-      } else {
-        enableSiteTranslation();
-      }
-      updateControlUi();
-    }
-  }
-
-  async function enableSiteTranslation() {
-    siteTranslationEnabled = true;
+  async function enableTranslation() {
+    translationEnabled = true;
     updateControlUi();
     await startTranslationForSite();
   }
 
-  function disableSiteTranslation() {
-    siteTranslationEnabled = false;
+  function disableTranslation() {
+    translationEnabled = false;
     pageTranslating = false;
     stopDOMObservation();
     stopContinuousTranslation();
@@ -1632,10 +894,15 @@
     if (translatorStartPromise) return translatorStartPromise;
 
     translatorStartPromise = (async function() {
-      if (!siteTranslationEnabled) return;
+      if (!translationEnabled) return;
 
       await setupActiveTranslator();
-      if (!siteTranslationEnabled || !translatorReady) return;
+      if (!translationEnabled) return;
+      if (!translatorReady) {
+        translationEnabled = false;
+        updateControlUi();
+        return;
+      }
 
       scheduleInitialTranslation();
       startDOMObservation();
@@ -1650,7 +917,7 @@
 
   function scheduleInitialTranslation() {
     const run = function() {
-      if (siteTranslationEnabled) translateWholePage();
+      if (translationEnabled) translateWholePage();
     };
 
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
@@ -1685,13 +952,6 @@
     });
   }
 
-  function getMicrosoftAuthToken() {
-    return requestText({
-      method: 'GET',
-      url: 'https://edge.microsoft.com/translate/auth'
-    });
-  }
-
   function normalizeLangForEngine(lang, engine) {
     if (engine === 'microsoft') return lang;
     if (lang === 'zh-Hans') return 'zh-CN';
@@ -1713,8 +973,8 @@
     translatorReady = false;
 
     if (engine === 'microsoft') {
-      await setupMicrosoftTranslator();
-      translatorReady = microsoftTranslatorActive;
+      // 新版 Edge 翻译接口免鉴权，不再需要先获取 token。
+      translatorReady = true;
       return;
     }
 
@@ -1726,35 +986,31 @@
     translatorReady = true;
   }
 
-  async function setupMicrosoftTranslator() {
-    if (microsoftTranslatorActive && microsoftAuthToken) return;
-    try {
-      microsoftAuthToken = await getMicrosoftAuthToken();
-      microsoftTranslatorActive = true;
-    } catch (e) {
-      microsoftTranslatorActive = false;
-      console.error('微软翻译初始化失败:', e);
-    }
-  }
-
   function translateMicrosoftBatch(texts, fromLang, toLang) {
     return new Promise((resolve, reject) => {
-      if (!microsoftAuthToken || !texts || texts.length === 0) {
+      if (!texts || texts.length === 0) {
         return reject(new Error('参数无效'));
       }
-      const fromParam = fromLang ? `&from=${fromLang}` : '';
+
+      // 微软已下线旧的 edge.microsoft.com/translate/auth 取 token 接口（返回 404）。
+      // 新版接口免鉴权，直接提交文本数组；from=auto 会返回 400，所以自动识别时省略 from。
+      const params = ['to=' + encodeURIComponent(toLang)];
+      if (fromLang) params.push('from=' + encodeURIComponent(fromLang));
+      const url = 'https://edge.microsoft.com/translate/translatetext?' + params.join('&');
+
       GM_xmlhttpRequest({
         method: 'POST',
-        url: `https://api-edge.cognitive.microsofttranslator.com/translate?to=${toLang}${fromParam}&api-version=3.0&includeSentenceLength=true`,
+        url: url,
         headers: {
-          'Authorization': `Bearer ${microsoftAuthToken}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': '*/*'
         },
-        data: JSON.stringify(texts.map(t => ({ Text: t }))),
+        data: JSON.stringify(texts),
         onload: res => {
           if (res.status === 200) {
             try {
               const result = JSON.parse(res.responseText);
+              if (!Array.isArray(result)) return reject(new Error('返回格式异常'));
               resolve(result.map(item => item && item.translations && item.translations[0] ? item.translations[0].text : null));
             } catch (e) { reject(new Error('解析失败')); }
           } else {
@@ -1829,7 +1085,7 @@
   async function translateOneByOne(texts, translateText) {
     const results = [];
     for (const text of texts) {
-      if (!siteTranslationEnabled) break;
+      if (!translationEnabled) break;
       try {
         results.push(await translateText(text));
       } catch (e) {
@@ -1870,15 +1126,9 @@
     'SCRIPT', 'STYLE', 'NOSCRIPT',
     '.microsoft-translated', '[data-no-translate]', '.no-translate', '.script-element',
     '[data-protect-translation="true"]',
-    '#auto-translate-control', '#auto-translate-settings-page',
-    '.auto-translate-control', '.auto-translate-settings-page', '[data-auto-translate-ui="true"]',
-    '.tm-script-menu', '#tm-script-menu',
-    '.vm-script-menu', '#vm-script-menu',
-    '.gm-script-menu', '#gm-script-menu',
-    '[class*="userscript"]', '[id*="userscript"]',
-    '[class*="tampermonkey"]', '[id*="tampermonkey"]',
-    '[class*="violentmonkey"]', '[id*="violentmonkey"]',
-    '[class*="greasemonkey"]', '[id*="greasemonkey"]'
+    '#auto-translate-control', '#auto-translate-selection',
+    '.auto-translate-control', '.auto-translate-selection',
+    '[data-auto-translate-ui="true"]', '[data-auto-translate-selection-ui="true"]'
   ];
 
   function makeNodeFilter() {
@@ -1898,7 +1148,6 @@
         const text = node.textContent.trim();
         if (!text || text.length < 2) return NodeFilter.FILTER_REJECT;
         if (/^\d+$/.test(text)) return NodeFilter.FILTER_REJECT;
-        if (/^[\d\s\W]+$/.test(text)) return NodeFilter.FILTER_REJECT;
         if (!/[a-zA-Z\u0400-\u04FF\u4e00-\u9fff]/.test(text)) return NodeFilter.FILTER_REJECT;
 
         return NodeFilter.FILTER_ACCEPT;
@@ -1974,13 +1223,13 @@
   // ── 翻译执行 ──────────────────────────────────────────
 
   async function runTranslation(textNodes) {
-    if (!siteTranslationEnabled || !translatorReady || textNodes.length === 0) return;
-    const fromLang = getTranslationSourceLang();
+    if (!translationEnabled || !translatorReady || textNodes.length === 0) return;
+    const fromLang = languageSettings.from === 'auto' ? null : languageSettings.from;
     const targetLang = getTranslationTargetLang();
     const batches = createTextBatches(textNodes);
 
     for (let i = 0; i < batches.length; i++) {
-      if (!siteTranslationEnabled || !pageTranslating) break;
+      if (!translationEnabled || !pageTranslating) break;
       const batch = batches[i];
       const toTranslate = [];
       const indices = [];
@@ -1998,7 +1247,7 @@
       if (toTranslate.length > 0) {
         try {
           const translations = await translateBatch(toTranslate, fromLang, targetLang);
-          if (!siteTranslationEnabled) break;
+          if (!translationEnabled) break;
           translations.forEach(function(tr, ti) {
             const info = batch.nodes[indices[ti]];
             if (tr && tr !== info.text) {
@@ -2024,7 +1273,7 @@
   }
 
   async function translateWholePage() {
-    if (!siteTranslationEnabled || pageTranslating || !translatorReady) return;
+    if (!translationEnabled || pageTranslating || !translatorReady) return;
     pageTranslating = true;
     translationRetryCount = 0;
     try {
@@ -2040,7 +1289,7 @@
   }
 
   function checkForUntranslatedText() {
-    if (!siteTranslationEnabled || !translatorReady || pageTranslating) return;
+    if (!translationEnabled || !translatorReady || pageTranslating) return;
     const nodes = collectTextNodes();
     if (nodes.length === 0) return;
     if (nodes.length > 10) {
@@ -2056,18 +1305,39 @@
 
   // ── DOM 监听 ──────────────────────────────────────────
 
+  function isAutoTranslateUiNode(node) {
+    if (!node) return false;
+    const element = node.nodeType === 1 ? node : node.parentElement;
+    return !!(element && element.closest && element.closest('[data-auto-translate-ui="true"]'));
+  }
+
+  function mutationAffectsPage(mutation) {
+    if (isAutoTranslateUiNode(mutation.target)) return false;
+
+    if (mutation.type === 'characterData') {
+      return mutation.target.nodeType === Node.TEXT_NODE;
+    }
+
+    if (mutation.type === 'childList') {
+      const nodes = Array.prototype.slice.call(mutation.addedNodes).concat(Array.prototype.slice.call(mutation.removedNodes));
+      if (nodes.length === 0) return false;
+      return nodes.some(function(node) {
+        return !isAutoTranslateUiNode(node);
+      });
+    }
+
+    return false;
+  }
+
   function startDOMObservation() {
-    if (isObservingDOM || !siteTranslationEnabled || !translatorReady) return;
+    if (isObservingDOM || !translationEnabled || !translatorReady) return;
     stopDOMObservation();
     domObserver = new MutationObserver(function(mutations) {
       if (pageTranslating) return;
       if (domChangeTimer) clearTimeout(domChangeTimer);
       domChangeTimer = setTimeout(function() {
-        const hasChanges = mutations.some(function(m) {
-          return (m.type === 'childList' && (m.addedNodes.length > 0 || m.removedNodes.length > 0)) ||
-                 (m.type === 'characterData' && m.target.nodeType === Node.TEXT_NODE);
-        });
-        if (hasChanges && siteTranslationEnabled) setTimeout(function() { translateWholePage(); }, 300);
+        const hasChanges = mutations.some(mutationAffectsPage);
+        if (hasChanges && translationEnabled) setTimeout(function() { translateWholePage(); }, 300);
       }, DOM_CHANGE_DELAY);
     });
     try {
@@ -2087,7 +1357,7 @@
   function startContinuousTranslation() {
     if (continuousTranslationTimer) clearInterval(continuousTranslationTimer);
     continuousTranslationTimer = setInterval(function() {
-      if (siteTranslationEnabled && !pageTranslating && translatorReady && Date.now() - lastTranslationTime > 20000) {
+      if (translationEnabled && !pageTranslating && translatorReady && Date.now() - lastTranslationTime > 20000) {
         checkForUntranslatedText();
       }
     }, 8000);
@@ -2112,9 +1382,683 @@
       lastScrollY = window.scrollY;
       if (scrollCheckTimer) clearTimeout(scrollCheckTimer);
       scrollCheckTimer = setTimeout(function() {
-        if (siteTranslationEnabled && !pageTranslating && translatorReady) checkForUntranslatedText();
+        if (translationEnabled && !pageTranslating && translatorReady) checkForUntranslatedText();
       }, SCROLL_CHECK_DELAY);
     }
+  }
+
+  // ── 划词翻译 ──────────────────────────────────────────
+
+  function isSelectionUiTarget(target) {
+    const element = target && target.nodeType === 1 ? target : (target && target.parentElement);
+    return !!(element && element.closest && element.closest('[data-auto-translate-selection-ui="true"]'));
+  }
+
+  function getSelectionAnchorElement(selection) {
+    const node = selection.anchorNode;
+    if (!node) return null;
+    return node.nodeType === 1 ? node : node.parentElement;
+  }
+
+  function isEditableSelection(selection) {
+    const element = getSelectionAnchorElement(selection);
+    if (!element) return false;
+    if (element.isContentEditable) return true;
+    if (!element.closest) return false;
+    return !!element.closest('input, textarea, select');
+  }
+
+  function getCurrentSelectionInfo() {
+    if (!selectionTranslateEnabled) return null;
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return null;
+
+    const anchorElement = getSelectionAnchorElement(selection);
+    if (anchorElement && anchorElement.closest && anchorElement.closest('[data-auto-translate-ui="true"]')) return null;
+    if (isEditableSelection(selection)) return null;
+
+    const fullText = selection.toString().trim();
+    if (!fullText) return null;
+
+    let rect = null;
+    try {
+      const range = selection.getRangeAt(0);
+      const rects = range.getClientRects();
+      rect = rects.length > 0 ? rects[rects.length - 1] : range.getBoundingClientRect();
+    } catch (e) {
+      rect = null;
+    }
+    if (!rect || (!rect.width && !rect.height)) return null;
+
+    return {
+      text: fullText.length > SELECTION_MAX_LENGTH ? fullText.slice(0, SELECTION_MAX_LENGTH) : fullText,
+      truncated: fullText.length > SELECTION_MAX_LENGTH,
+      rect: rect
+    };
+  }
+
+  function ensureSelectionUi() {
+    if (selectionUiRoot || !document.body) return;
+
+    injectControlStyle();
+    selectionUiRoot = document.createElement('div');
+    selectionUiRoot.id = 'auto-translate-selection';
+    selectionUiRoot.className = 'auto-translate-selection no-translate script-element';
+    selectionUiRoot.hidden = true;
+    selectionUiRoot.setAttribute('translate', 'no');
+    selectionUiRoot.setAttribute('data-no-translate', 'true');
+    selectionUiRoot.setAttribute('data-protect-translation', 'true');
+    selectionUiRoot.setAttribute('data-auto-translate-ui', 'true');
+    selectionUiRoot.setAttribute('data-auto-translate-selection-ui', 'true');
+    selectionUiRoot.innerHTML = `
+      <div class="auto-translate-selection-toolbar" data-role="selection-toolbar" hidden>
+        <button type="button" class="auto-translate-selection-button" data-action="translate-selection" title="翻译选中文字">
+          <span class="auto-translate-selection-mark">译</span>
+          <span>翻译</span>
+        </button>
+        <button type="button" class="auto-translate-selection-speak" data-action="speak-selection" title="朗读选中文字" aria-label="朗读选中文字">🔊</button>
+      </div>
+      <div class="auto-translate-selection-result" data-role="selection-result" data-state="done" hidden>
+        <div class="auto-translate-selection-result-head">
+          <span class="auto-translate-selection-result-title" data-role="selection-result-title">翻译结果</span>
+          <div class="auto-translate-selection-result-actions">
+            <button type="button" class="auto-translate-selection-speak-result" data-action="speak-result" title="朗读译文" aria-label="朗读译文" hidden>🔊</button>
+            <button type="button" class="auto-translate-selection-close" data-action="close-selection" aria-label="关闭" title="关闭">×</button>
+          </div>
+        </div>
+        <div class="auto-translate-selection-result-body" data-role="selection-result-body"></div>
+        <div class="auto-translate-selection-result-note" data-role="selection-result-note" hidden>仅翻译前 5000 个字符</div>
+      </div>
+    `;
+    document.body.appendChild(selectionUiRoot);
+
+    if (!isSpeechSupported()) {
+      const speakSelection = selectionUiRoot.querySelector('[data-action="speak-selection"]');
+      if (speakSelection) speakSelection.hidden = true;
+    }
+
+    selectionUiRoot.addEventListener('mousedown', function(event) {
+      if (event.target.closest && event.target.closest('[data-action="translate-selection"], [data-action="speak-selection"]')) {
+        // 阻止点击按钮时清空网页选区。
+        event.preventDefault();
+        selectionIgnoreHideUntil = Date.now() + 1500;
+      }
+      event.stopPropagation();
+    });
+
+    selectionUiRoot.addEventListener('click', function(event) {
+      const actionButton = event.target.closest && event.target.closest('[data-action]');
+      if (!actionButton) return;
+      const action = actionButton.getAttribute('data-action');
+      if (action === 'translate-selection') {
+        event.preventDefault();
+        event.stopPropagation();
+        translateCurrentSelection();
+      } else if (action === 'speak-selection') {
+        event.preventDefault();
+        event.stopPropagation();
+        speakSelectedText();
+      } else if (action === 'speak-result') {
+        event.preventDefault();
+        event.stopPropagation();
+        speakSelectionResult();
+      } else if (action === 'close-selection') {
+        event.preventDefault();
+        event.stopPropagation();
+        hideSelectionResult();
+      }
+    });
+  }
+
+  function updateSelectionUiVisibility() {
+    if (!selectionUiRoot) return;
+    const toolbar = selectionUiRoot.querySelector('[data-role="selection-toolbar"]');
+    const result = selectionUiRoot.querySelector('[data-role="selection-result"]');
+    const hasVisible = (toolbar && !toolbar.hidden) || (result && !result.hidden);
+    selectionUiRoot.hidden = !hasVisible;
+  }
+
+  function positionSelectionFloating(element, rect, preferAbove) {
+    if (!element) return;
+
+    const margin = 8;
+    const gap = 8;
+    if (selectionUiRoot) selectionUiRoot.hidden = false;
+    element.style.visibility = 'hidden';
+    element.hidden = false;
+
+    const width = element.offsetWidth || 90;
+    const height = element.offsetHeight || 36;
+    let left = rect.left + rect.width / 2 - width / 2;
+    let top = preferAbove ? rect.top - height - gap : rect.bottom + gap;
+
+    if (preferAbove && top < margin) top = rect.bottom + gap;
+    if (!preferAbove && top + height > window.innerHeight - margin) top = rect.top - height - gap;
+
+    left = Math.min(Math.max(margin, left), Math.max(margin, window.innerWidth - width - margin));
+    top = Math.min(Math.max(margin, top), Math.max(margin, window.innerHeight - height - margin));
+
+    element.style.left = Math.round(left) + 'px';
+    element.style.top = Math.round(top) + 'px';
+    element.style.visibility = '';
+  }
+
+  function showSelectionToolbarForCurrentSelection() {
+    if (!selectionTranslateEnabled) return;
+
+    const info = getCurrentSelectionInfo();
+    if (!info) {
+      hideSelectionToolbar();
+      return;
+    }
+
+    if (selectionResultOpen) {
+      if (info.text === selectionText) return;
+      hideSelectionResult();
+    }
+
+    selectionText = info.text;
+    selectionTextTruncated = info.truncated;
+    selectionAnchorRect = info.rect;
+    ensureSelectionUi();
+    if (!selectionUiRoot) return;
+
+    const toolbar = selectionUiRoot.querySelector('[data-role="selection-toolbar"]');
+    if (!toolbar) return;
+
+    positionSelectionFloating(toolbar, info.rect, true);
+    updateSelectionUiVisibility();
+  }
+
+  function hideSelectionToolbar() {
+    if (selectionUiRoot) {
+      const toolbar = selectionUiRoot.querySelector('[data-role="selection-toolbar"]');
+      if (toolbar) toolbar.hidden = true;
+    }
+    updateSelectionUiVisibility();
+  }
+
+  function hideSelectionResult() {
+    selectionRequestId++;
+    selectionResultOpen = false;
+    stopSelectionSpeech();
+    if (selectionUiRoot) {
+      const result = selectionUiRoot.querySelector('[data-role="selection-result"]');
+      if (result) result.hidden = true;
+    }
+    updateSelectionUiVisibility();
+  }
+
+  function hideSelectionUi() {
+    hideSelectionToolbar();
+    hideSelectionResult();
+  }
+
+  function isSpeechSupported() {
+    return typeof window.speechSynthesis === 'object' &&
+      window.speechSynthesis !== null &&
+      typeof window.SpeechSynthesisUtterance === 'function';
+  }
+
+  const SPEECH_LANG_MAP = {
+    en: 'en-US',
+    'zh-Hans': 'zh-CN',
+    'zh-Hant': 'zh-TW',
+    ja: 'ja-JP',
+    ko: 'ko-KR',
+    fr: 'fr-FR',
+    de: 'de-DE',
+    es: 'es-ES',
+    pt: 'pt-PT',
+    it: 'it-IT',
+    ru: 'ru-RU',
+    ar: 'ar-SA',
+    hi: 'hi-IN',
+    th: 'th-TH',
+    vi: 'vi-VN',
+    id: 'id-ID',
+    tr: 'tr-TR',
+    nl: 'nl-NL',
+    pl: 'pl-PL',
+    sv: 'sv-SE',
+    da: 'da-DK',
+    fi: 'fi-FI',
+    no: 'nb-NO',
+    cs: 'cs-CZ',
+    el: 'el-GR',
+    he: 'he-IL',
+    uk: 'uk-UA',
+    ro: 'ro-RO',
+    hu: 'hu-HU',
+    fa: 'fa-IR',
+    ur: 'ur-PK',
+    bn: 'bn-BD',
+    ta: 'ta-IN',
+    te: 'te-IN',
+    ml: 'ml-IN',
+    sw: 'sw-KE',
+    af: 'af-ZA',
+    ca: 'ca-ES',
+    fil: 'fil-PH'
+  };
+
+  function toSpeechLang(code) {
+    const normalized = normalizeDetectedLanguageCode(code);
+    return SPEECH_LANG_MAP[normalized] || normalized || navigator.language || 'en-US';
+  }
+
+  function stopSelectionSpeech() {
+    if (selectionSpeakingText && isSpeechSupported()) {
+      try { window.speechSynthesis.cancel(); } catch (e) {}
+    }
+    selectionSpeakingText = '';
+  }
+
+  function speakSelectionText(text, lang) {
+    if (!text || !isSpeechSupported()) return;
+
+    const synth = window.speechSynthesis;
+    if (selectionSpeakingText === text && (synth.speaking || synth.pending)) {
+      stopSelectionSpeech();
+      return;
+    }
+
+    stopSelectionSpeech();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = toSpeechLang(lang);
+    utterance.onend = function() {
+      if (selectionSpeakingText === text) selectionSpeakingText = '';
+    };
+    utterance.onerror = function() {
+      if (selectionSpeakingText === text) selectionSpeakingText = '';
+    };
+    selectionSpeakingText = text;
+    try {
+      synth.speak(utterance);
+    } catch (e) {
+      selectionSpeakingText = '';
+    }
+  }
+
+  function speakSelectedText() {
+    if (!selectionText) return;
+    const detected = detectSelectionLanguageByScript(selectionText, selectionDirection.langA, selectionDirection.langB);
+    const pageLang = document.documentElement
+      ? normalizeDetectedLanguageCode(document.documentElement.getAttribute('lang'))
+      : null;
+    speakSelectionText(selectionText, detected || pageLang || selectionDirection.langA);
+  }
+
+  function speakSelectionResult() {
+    if (!selectionUiRoot) return;
+    const body = selectionUiRoot.querySelector('[data-role="selection-result-body"]');
+    if (!body || !body.textContent) return;
+    speakSelectionText(body.textContent, selectionResultTargetLang || selectionDirection.langB);
+  }
+
+  function showSelectionResult(state, content) {
+    ensureSelectionUi();
+    if (!selectionUiRoot) return;
+
+    const result = selectionUiRoot.querySelector('[data-role="selection-result"]');
+    const title = selectionUiRoot.querySelector('[data-role="selection-result-title"]');
+    const body = selectionUiRoot.querySelector('[data-role="selection-result-body"]');
+    const note = selectionUiRoot.querySelector('[data-role="selection-result-note"]');
+    const toolbar = selectionUiRoot.querySelector('[data-role="selection-toolbar"]');
+    const speakButton = selectionUiRoot.querySelector('[data-action="speak-result"]');
+    if (!result || !title || !body) return;
+
+    if (state !== 'done') stopSelectionSpeech();
+    selectionResultOpen = true;
+    result.dataset.state = state;
+    if (state === 'done') {
+      const sourceLabel = getLanguageLabel(selectionResultSourceLang);
+      const targetLabel = getLanguageLabel(selectionResultTargetLang);
+      title.textContent = sourceLabel && targetLabel
+        ? '翻译结果 · ' + sourceLabel + ' → ' + targetLabel
+        : (targetLabel ? '翻译结果 · 翻译为' + targetLabel : '翻译结果');
+    } else {
+      title.textContent = state === 'loading' ? '正在翻译' : '翻译失败';
+    }
+    body.textContent = content;
+    if (note) note.hidden = !(state === 'done' && selectionTextTruncated);
+    if (speakButton) speakButton.hidden = !(state === 'done' && isSpeechSupported());
+    if (toolbar) toolbar.hidden = true;
+
+    const rect = selectionAnchorRect || {
+      left: window.innerWidth / 2,
+      top: window.innerHeight / 3,
+      width: 0,
+      height: 0,
+      bottom: window.innerHeight / 3
+    };
+    positionSelectionFloating(result, rect, false);
+    updateSelectionUiVisibility();
+  }
+
+  const SCRIPT_PATTERNS = [
+    ['han', /[一-鿿]/g],
+    ['cyrillic', /[Ѐ-ӿ]/g],
+    ['arabic', /[؀-ۿ]/g],
+    ['hebrew', /[֐-׿]/g],
+    ['greek', /[Ͱ-Ͽ]/g],
+    ['thai', /[฀-๿]/g],
+    ['devanagari', /[ऀ-ॿ]/g],
+    ['bengali', /[ঀ-৿]/g],
+    ['gujarati', /[઀-૿]/g],
+    ['gurmukhi', /[਀-੿]/g],
+    ['tamil', /[஀-௿]/g],
+    ['telugu', /[ఀ-౿]/g],
+    ['kannada', /[ಀ-೿]/g],
+    ['malayalam', /[ഀ-ൿ]/g],
+    ['sinhala', /[඀-෿]/g],
+    ['khmer', /[ក-៿]/g],
+    ['lao', /[຀-໿]/g],
+    ['myanmar', /[က-႟]/g],
+    ['ethiopic', /[ሀ-፿]/g],
+    ['armenian', /[԰-֏]/g],
+    ['latin', /[A-Za-zÀ-ɏ]/g]
+  ];
+
+  const LANGUAGE_SCRIPT_MAP = {
+    'zh-Hans': 'han',
+    'zh-Hant': 'han',
+    ja: 'kana',
+    ko: 'hangul',
+    ru: 'cyrillic',
+    uk: 'cyrillic',
+    bg: 'cyrillic',
+    mn: 'cyrillic',
+    ar: 'arabic',
+    fa: 'arabic',
+    ur: 'arabic',
+    he: 'hebrew',
+    el: 'greek',
+    th: 'thai',
+    hi: 'devanagari',
+    mr: 'devanagari',
+    ne: 'devanagari',
+    bn: 'bengali',
+    ta: 'tamil',
+    te: 'telugu',
+    kn: 'kannada',
+    ml: 'malayalam',
+    gu: 'gujarati',
+    pa: 'gurmukhi',
+    km: 'khmer',
+    lo: 'lao',
+    my: 'myanmar',
+    si: 'sinhala',
+    am: 'ethiopic',
+    hy: 'armenian'
+  };
+
+  function getLanguageScript(lang) {
+    return LANGUAGE_SCRIPT_MAP[lang] || 'latin';
+  }
+
+  function detectTextScript(text) {
+    const sample = String(text || '').slice(0, 500);
+    if (/[぀-ヿ]/.test(sample)) return 'kana';
+    if (/[가-힯]/.test(sample)) return 'hangul';
+
+    let bestScript = null;
+    let bestCount = 0;
+    for (let i = 0; i < SCRIPT_PATTERNS.length; i++) {
+      let count = (sample.match(SCRIPT_PATTERNS[i][1]) || []).length;
+      // 一个汉字的信息量远大于一个拉丁字母，加权避免中英混排被误判成英文。
+      if (SCRIPT_PATTERNS[i][0] === 'han') count *= 3;
+      if (count > bestCount) {
+        bestCount = count;
+        bestScript = SCRIPT_PATTERNS[i][0];
+      }
+    }
+    return bestCount > 0 ? bestScript : null;
+  }
+
+  function detectSelectionLanguageByScript(text, langA, langB) {
+    const script = detectTextScript(text);
+    if (!script) return null;
+
+    const scriptA = getLanguageScript(langA);
+    const scriptB = getLanguageScript(langB);
+    const matchA = scriptA === script;
+    const matchB = scriptB === script;
+    if (matchA && !matchB) return langA;
+    if (matchB && !matchA) return langB;
+    return null;
+  }
+
+  function normalizeDetectedLanguageCode(code) {
+    if (!code) return null;
+    const value = String(code).toLowerCase();
+    if (value === 'zh' || value === 'zh-cn' || value === 'zh-sg' || value === 'zh-hans') return 'zh-Hans';
+    if (value === 'zh-tw' || value === 'zh-hk' || value === 'zh-hant') return 'zh-Hant';
+    return value.split('-')[0];
+  }
+
+  function languageCodesMatch(a, b) {
+    if (!a || !b) return false;
+    const valueA = String(a).toLowerCase();
+    const valueB = String(b).toLowerCase();
+    if (valueA === valueB) return true;
+    const baseA = valueA.split('-')[0];
+    const baseB = valueB.split('-')[0];
+    if (baseA !== baseB) return false;
+    if (baseA === 'zh' && valueA.indexOf('-') !== -1 && valueB.indexOf('-') !== -1) return false;
+    return true;
+  }
+
+  function getSelectionDirectionTarget(detectedLang, langA, langB, fallbackTarget) {
+    if (detectedLang) {
+      if (languageCodesMatch(detectedLang, langA)) return langB;
+      if (languageCodesMatch(detectedLang, langB)) return langA;
+    }
+    return fallbackTarget;
+  }
+
+  function translateMicrosoftSelection(text, toLang) {
+    return new Promise(function(resolve, reject) {
+      const url = 'https://edge.microsoft.com/translate/translatetext?to=' + encodeURIComponent(toLang);
+      GM_xmlhttpRequest({
+        method: 'POST',
+        url: url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': '*/*'
+        },
+        data: JSON.stringify([text]),
+        onload: function(res) {
+          if (res.status === 200) {
+            try {
+              const result = JSON.parse(res.responseText);
+              const item = Array.isArray(result) ? result[0] : null;
+              const translation = item && item.translations && item.translations[0] ? item.translations[0].text : null;
+              const detectedLang = item && item.detectedLanguage ? item.detectedLanguage.language : null;
+              resolve({ translation: translation, detectedLang: detectedLang });
+            } catch (e) {
+              reject(new Error('解析失败'));
+            }
+          } else {
+            reject(new Error('翻译失败: ' + res.status));
+          }
+        },
+        onerror: function() { reject(new Error('网络请求失败')); }
+      });
+    });
+  }
+
+  async function translateGoogleSelection(text, toLang) {
+    const targetLang = normalizeTargetLang(toLang, 'google');
+    const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=' +
+      encodeURIComponent(targetLang) + '&dt=t&q=' + encodeURIComponent(text);
+    const response = await requestText({ url: url });
+    const result = JSON.parse(response);
+    const translation = Array.isArray(result) && Array.isArray(result[0])
+      ? result[0].map(function(part) { return Array.isArray(part) ? part[0] : ''; }).join('')
+      : null;
+    const detectedLang = Array.isArray(result) && typeof result[2] === 'string' ? result[2] : null;
+    return { translation: translation, detectedLang: detectedLang };
+  }
+
+  function getLanguageLabel(code) {
+    if (!code) return '';
+    const option = TARGET_LANGUAGE_OPTIONS.find(function(item) {
+      return item.value === code;
+    });
+    return option ? option.label : String(code);
+  }
+
+  function makeSelectionResult(translation, sourceLang, targetLang) {
+    return {
+      translation: translation || null,
+      sourceLang: sourceLang || '',
+      targetLang: targetLang || ''
+    };
+  }
+
+  async function translateSelectionText(text) {
+    await setupActiveTranslator();
+    if (!translatorReady) throw new Error('翻译服务不可用');
+
+    // 划词翻译使用自己的语言 B 作为目标，不再跟随悬浮翻译的目标语言。
+    const fallbackTarget = selectionDirection.langB;
+    if (!selectionDirection.smartDetect) {
+      const results = await translateBatch([text], 'auto', fallbackTarget);
+      return makeSelectionResult(results && results[0], '', fallbackTarget);
+    }
+
+    const langA = selectionDirection.langA;
+    const langB = selectionDirection.langB;
+    const localLang = detectSelectionLanguageByScript(text, langA, langB);
+
+    if (localLang) {
+      const target = localLang === langA ? langB : langA;
+      const results = await translateBatch([text], 'auto', target);
+      return makeSelectionResult(results && results[0], localLang, target);
+    }
+
+    const engine = translatorSettings.engine;
+    if (engine === 'microsoft' || engine === 'google') {
+      const probeTarget = langB;
+      const probe = engine === 'microsoft'
+        ? await translateMicrosoftSelection(text, probeTarget)
+        : await translateGoogleSelection(text, probeTarget);
+      const detected = normalizeDetectedLanguageCode(probe.detectedLang);
+      const target = getSelectionDirectionTarget(detected, langA, langB, fallbackTarget);
+
+      if (target === probeTarget && probe.translation) {
+        return makeSelectionResult(probe.translation, detected || '', target);
+      }
+      const results = await translateBatch([text], 'auto', target);
+      return makeSelectionResult(results && results[0], detected || '', target);
+    }
+
+    const results = await translateBatch([text], 'auto', langB);
+    return makeSelectionResult(results && results[0], '', langB);
+  }
+
+  async function translateCurrentSelection() {
+    const text = selectionText;
+    if (!text) return;
+
+    selectionIgnoreHideUntil = Date.now() + 2000;
+    hideSelectionToolbar();
+    showSelectionResult('loading', '正在翻译…');
+    const requestId = ++selectionRequestId;
+
+    try {
+      const result = await translateSelectionText(text);
+      if (requestId !== selectionRequestId) return;
+      if (!result || !result.translation) throw new Error('没有返回翻译结果');
+      selectionResultSourceLang = result.sourceLang;
+      selectionResultTargetLang = result.targetLang;
+      showSelectionResult('done', result.translation);
+    } catch (error) {
+      if (requestId !== selectionRequestId) return;
+      const message = error && error.message ? error.message : String(error);
+      showSelectionResult('error', '翻译失败：' + message + '\n\n可在脚本猫的脚本配置里更换翻译服务。');
+    }
+  }
+
+  function scheduleSelectionToolbar(delay) {
+    if (!selectionTranslateEnabled) return;
+    if (selectionShowTimer) clearTimeout(selectionShowTimer);
+    selectionShowTimer = setTimeout(function() {
+      selectionShowTimer = null;
+      showSelectionToolbarForCurrentSelection();
+    }, typeof delay === 'number' ? delay : 20);
+  }
+
+  function handleSelectionMouseUp(event) {
+    selectionPointerDown = false;
+    if (event.button !== undefined && event.button !== 0) return;
+    if (isSelectionUiTarget(event.target)) return;
+    scheduleSelectionToolbar(20);
+  }
+
+  function handleSelectionTouchEnd(event) {
+    selectionPointerDown = false;
+    if (isSelectionUiTarget(event.target)) return;
+    scheduleSelectionToolbar(150);
+  }
+
+  function handleSelectionKeyUp(event) {
+    if (event.key === 'Escape') return;
+    if (isSelectionUiTarget(event.target)) return;
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed) return;
+    scheduleSelectionToolbar(120);
+  }
+
+  function handleSelectionChange() {
+    if (!selectionTranslateEnabled || selectionPointerDown || selectionResultOpen) return;
+
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || !selection.toString().trim()) {
+      if (Date.now() > selectionIgnoreHideUntil) hideSelectionToolbar();
+      return;
+    }
+    if (selectionShowTimer) return;
+    scheduleSelectionToolbar(350);
+  }
+
+  function handleSelectionPointerDown(event) {
+    selectionPointerDown = true;
+    if (isSelectionUiTarget(event.target)) return;
+
+    if (selectionShowTimer) {
+      clearTimeout(selectionShowTimer);
+      selectionShowTimer = null;
+    }
+    hideSelectionUi();
+  }
+
+  function handleSelectionScroll() {
+    hideSelectionToolbar();
+  }
+
+  function handleSelectionResize() {
+    hideSelectionToolbar();
+  }
+
+  function handleSelectionKeyDown(event) {
+    if (event.key === 'Escape') hideSelectionUi();
+  }
+
+  function attachSelectionListeners() {
+    if (selectionListenersAttached) return;
+    selectionListenersAttached = true;
+    document.addEventListener('mouseup', handleSelectionMouseUp, true);
+    document.addEventListener('touchend', handleSelectionTouchEnd, true);
+    document.addEventListener('keyup', handleSelectionKeyUp, true);
+    document.addEventListener('keydown', handleSelectionKeyDown, true);
+    document.addEventListener('mousedown', handleSelectionPointerDown, true);
+    document.addEventListener('touchstart', handleSelectionPointerDown, true);
+    document.addEventListener('selectionchange', handleSelectionChange);
+    document.addEventListener('scroll', handleSelectionScroll, true);
+    window.addEventListener('resize', handleSelectionResize);
   }
 
   // ── 初始化 ────────────────────────────────────────────
@@ -2122,25 +2066,27 @@
   async function init() {
     readTranslatorSettings();
     readLanguageSettings();
+    readSelectionDirection();
     readIconOpacity();
-    readDefaultSitePreference();
-    readPromptEveryPage();
-    ensureControlUi();
-    showInstallHint();
-    sitePreference = readSitePreference();
-    updateControlUi();
-    if (promptEveryPage && sitePreference === null) {
-      setTimeout(function() {
-        if (!settingsRoot || settingsRoot.hidden) showControlPanel();
-      }, 300);
-    }
+    readDefaultTranslate();
+    readFloatingTranslateEnabled();
+    readSelectionTranslate();
 
-    if (isCurrentSiteEnabled()) {
-      await enableSiteTranslation();
+    if (selectionTranslateEnabled) attachSelectionListeners();
+
+    if (!floatingTranslateEnabled) {
+      translationEnabled = false;
       return;
     }
 
-    siteTranslationEnabled = false;
+    ensureControlUi();
+    updateControlUi();
+
+    if (defaultTranslateEnabled) {
+      await enableTranslation();
+    } else {
+      translationEnabled = false;
+    }
   }
 
   if (document.readyState === 'loading') {
